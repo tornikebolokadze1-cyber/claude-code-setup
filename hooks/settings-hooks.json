@@ -1,0 +1,109 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "LOGDIR=\"$HOME/.claude/audit-logs\"; mkdir -p \"$LOGDIR\"; echo \"[$(date '+%Y-%m-%d %H:%M:%S')] TOOL=$CLAUDE_TOOL_NAME\" >> \"$LOGDIR/audit-$(date '+%Y-%m-%d').log\" 2>/dev/null || true"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"$CLAUDE_TOOL_INPUT\"; if echo \"$CMD\" | grep -qE '^(npm|pnpm|yarn|bun) (run )?dev$'; then DIR_NAME=$(basename \"$(pwd)\" | tr -c '[:alnum:]' '_'); if command -v tmux >/dev/null 2>&1; then tmux has-session -t \"$DIR_NAME\" 2>/dev/null && tmux kill-session -t \"$DIR_NAME\"; tmux new-session -d -s \"$DIR_NAME\" \"$CMD\"; echo \"Dev server started in tmux session: $DIR_NAME\" >&2; exit 2; fi; fi; exit 0"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "CMD=\"$CLAUDE_TOOL_INPUT\"; if echo \"$CMD\" | grep -qiE '(git push --force|git push -f |git reset --hard|DROP TABLE|DROP DATABASE|TRUNCATE TABLE|rm -rf /|rm -rf \\*)'; then echo 'GOVERNANCE: Destructive command detected' >&2; LOGDIR=\"$HOME/.claude/audit-logs\"; mkdir -p \"$LOGDIR\"; echo \"[$(date '+%Y-%m-%d %H:%M:%S')] BLOCKED: $CMD\" >> \"$LOGDIR/governance-$(date '+%Y-%m-%d').log\"; exit 2; fi; exit 0"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.tsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.json || \"$CLAUDE_TOOL_FILE_PATH\" == *.css || \"$CLAUDE_TOOL_FILE_PATH\" == *.html ]]; then npx prettier --write \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then black \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.go ]]; then gofmt -w \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.js || \"$CLAUDE_TOOL_FILE_PATH\" == *.ts || \"$CLAUDE_TOOL_FILE_PATH\" == *.jsx || \"$CLAUDE_TOOL_FILE_PATH\" == *.tsx ]]; then npx eslint \"$CLAUDE_TOOL_FILE_PATH\" --fix 2>/dev/null || true; elif [[ \"$CLAUDE_TOOL_FILE_PATH\" == *.py ]]; then pylint \"$CLAUDE_TOOL_FILE_PATH\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_FILE_PATH\"; PATTERNS='(password|passwd|secret|api_key|apikey|api_secret|access_key|access_token|auth_token|private_key|client_secret|db_password|database_url|connection_string|jwt_secret|encryption_key|signing_key|webhook_secret)\\s*[=:]\\s*[\"'\\''`][^\"'\\''`]{8,}'; if grep -qiE \"$PATTERNS\" \"$FILE\" 2>/dev/null; then echo '=== SECURITY ALERT ===' >&2; echo \"Potential secret in: $FILE\" >&2; grep -niE \"$PATTERNS\" \"$FILE\" 2>/dev/null | head -5 >&2; echo '=== Move to .env ===' >&2; exit 1; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_FILE_PATH\"; if echo \"$FILE\" | grep -qiE '\\.(env|pem|key|p12|pfx|jks|keystore|credentials|secret)$'; then echo '=== BLOCKED: Sensitive file type ===' >&2; exit 1; fi; if echo \"$FILE\" | grep -qiE '(id_rsa|id_ed25519|\\.ssh/)'; then echo '=== BLOCKED: SSH file ===' >&2; exit 1; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_FILE_PATH\"; BACKUP_DIR=\"$HOME/.claude/file-backups/$(date '+%Y-%m-%d')\"; mkdir -p \"$BACKUP_DIR\"; SAFE_NAME=$(echo \"$FILE\" | tr '/' '_'); if [ -f \"$FILE\" ]; then cp \"$FILE\" \"$BACKUP_DIR/${SAFE_NAME}.$(date '+%H%M%S').bak\" 2>/dev/null || true; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_FILE_PATH\"; if [[ \"$FILE\" == *.js || \"$FILE\" == *.ts || \"$FILE\" == *.jsx || \"$FILE\" == *.tsx ]]; then if ! echo \"$FILE\" | grep -qE '\\.(test|spec|config)\\.' && ! echo \"$FILE\" | grep -qE '(__tests__|__mocks__|scripts/)'; then FOUND=$(grep -n 'console\\.log\\|console\\.warn\\|console\\.error' \"$FILE\" 2>/dev/null | head -5); if [ -n \"$FOUND\" ]; then echo \"WARNING: console.log found in $FILE\" >&2; echo \"$FOUND\" >&2; fi; fi; fi"
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "FILE=\"$CLAUDE_TOOL_FILE_PATH\"; if [[ \"$FILE\" == *.ts || \"$FILE\" == *.tsx ]]; then DIR=\"$(dirname \"$FILE\")\"; TSCONFIG=\"\"; CUR=\"$DIR\"; for i in $(seq 1 15); do if [ -f \"$CUR/tsconfig.json\" ]; then TSCONFIG=\"$CUR/tsconfig.json\"; break; fi; CUR=\"$(dirname \"$CUR\")\"; done; if [ -n \"$TSCONFIG\" ]; then cd \"$(dirname \"$TSCONFIG\")\" && npx tsc --noEmit --pretty 2>&1 | grep -A2 \"$(basename \"$FILE\")\" | head -10 >&2 || true; fi; fi"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "METRICS_DIR=\"$HOME/.claude/metrics\"; mkdir -p \"$METRICS_DIR\"; echo \"{\\\"timestamp\\\":\\\"$(date -u '+%Y-%m-%dT%H:%M:%SZ')\\\",\\\"session_id\\\":\\\"$(echo $RANDOM$RANDOM | md5sum 2>/dev/null | cut -c1-8 || echo unknown)\\\",\\\"cwd\\\":\\\"$(pwd)\\\"}\" >> \"$METRICS_DIR/sessions-$(date '+%Y-%m').jsonl\" 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
