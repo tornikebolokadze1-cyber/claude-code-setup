@@ -40,20 +40,37 @@ VAULT_DIR="$HOME/.config/claude-secrets"
 STAMP=$(date -u +%Y%m%d-%H%M%S)
 
 MATCHES=()
+# Project roots to scan. Override with PROJECTS_ROOT env var (colon- or space-separated).
+PROJECTS_ROOT="${PROJECTS_ROOT:-$HOME}"
 
-# Check 1: ~/.claude/.credentials.json
+# Check 1: ~/.claude/.credentials.json (Claude Code OAuth / plugin auth)
 if [[ -f "$CONFIG_DIR/.credentials.json" ]]; then
   MATCHES+=("$CONFIG_DIR/.credentials.json")
 fi
 
-# Check 2: project-local .env files (not .env.example)
-if [[ -d . ]]; then
+# Check 2: known Claude Code subpaths that commonly contain secrets
+for sub in "channels/telegram/.env" "channels/slack/.env" "channels/discord/.env" ".env" ".env.local"; do
+  [[ -f "$CONFIG_DIR/$sub" ]] && MATCHES+=("$CONFIG_DIR/$sub")
+done
+
+# Check 3: scan every project directory under $PROJECTS_ROOT for .env files.
+# Respects .env.example (tracked placeholder, never a secret).
+for root in $PROJECTS_ROOT; do
+  [[ -d "$root" ]] || continue
   while IFS= read -r -d '' f; do
     case "$(basename "$f")" in
       .env.example) continue ;;
       .env|.env.*) MATCHES+=("$f") ;;
     esac
-  done < <(find . -type f \( -name ".env" -o -name ".env.*" \) -not -path '*/node_modules/*' -not -path '*/.git/*' -print0 2>/dev/null || true)
+  done < <(find "$root" -maxdepth 4 -type f \( -name ".env" -o -name ".env.*" \) \
+             -not -path '*/node_modules/*' -not -path '*/.git/*' \
+             -not -path '*/.venv/*' -not -path '*/venv/*' \
+             -not -path '*/Desktop/*' -print0 2>/dev/null || true)
+done
+
+# Deduplicate (in case $CONFIG_DIR is nested inside $PROJECTS_ROOT)
+if (( ${#MATCHES[@]} > 0 )); then
+  mapfile -t MATCHES < <(printf '%s\n' "${MATCHES[@]}" | awk '!seen[$0]++')
 fi
 
 if [[ ${#MATCHES[@]} -eq 0 ]]; then
@@ -101,10 +118,20 @@ for m in "${MATCHES[@]}"; do
 
   # Extract KEY names for the template
   if [[ "$BASENAME" == *.json ]]; then
-    # JSON: try to get top-level keys
+    # JSON: flatten one level deep so nested OAuth objects are captured.
+    # e.g. {"claudeAiOauth": {"accessToken": "..."}} -> claudeAiOauth_accessToken
     KEYS=$(node -e "
       const j = JSON.parse(require('fs').readFileSync('$m', 'utf8'));
-      console.log(Object.keys(j).join('\n'))
+      const out = [];
+      for (const k of Object.keys(j)) {
+        const v = j[k];
+        if (v !== null && typeof v === 'object' && !Array.isArray(v)) {
+          for (const n of Object.keys(v)) out.push(k + '_' + n);
+        } else {
+          out.push(k);
+        }
+      }
+      console.log(out.join('\n'));
     " 2>/dev/null || true)
   else
     # .env style: extract KEY= names
