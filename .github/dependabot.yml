@@ -1,0 +1,89 @@
+version: 2
+
+updates:
+  # ── GitHub Actions ──────────────────────────────────────────────────────────
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"      # 05:00 UTC = 09:00 UTC+4 (Tbilisi)
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  # ── npm templates ───────────────────────────────────────────────────────────
+  - package-ecosystem: "npm"
+    directory: "/bootstrap-templates/express-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  - package-ecosystem: "npm"
+    directory: "/bootstrap-templates/nextjs-webapp"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  - package-ecosystem: "npm"
+    directory: "/bootstrap-templates/hybrid-code-n8n"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  # ── pip templates ───────────────────────────────────────────────────────────
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/ai-agent"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/fastapi-backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"
+
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/telegram-bot"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "05:00"
+      timezone: "Asia/Tbilisi"
+    open-pull-requests-limit: 5
+    labels:
+      - "dependencies"
+      - "automated"

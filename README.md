@@ -199,7 +199,7 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## What the Hooks Do
 
-7 automated hooks that run on every Claude Code action (configured in `settings.json`):
+11 automated hooks that run on every Claude Code action (configured in `settings.json`):
 
 ### Pre-Action Hooks (run BEFORE Claude executes)
 
@@ -333,6 +333,20 @@ cp -r bootstrap-templates/fastapi-backend ~/.claude/bootstrap-templates/
 ### Hooks (manual merge required)
 
 Hooks must be merged into your `~/.claude/settings.json`. See `hooks/settings-hooks.json` for the full configuration.
+
+---
+
+## Windows Support
+
+Claude Code itself runs on Windows via the Claude Code desktop app. However, the hooks in `hooks/settings-hooks.json` use bash constructs (`grep -E`, `[[`, `md5sum`, `tmux`, `$HOME`) that require a Unix shell.
+
+**Two options for Windows users:**
+
+- **Option 1 — Recommended:** Run Claude Code under **Git Bash** (installed with Git for Windows) or **WSL**. Open a Git Bash or WSL terminal and launch `claude` from there. All hooks work unchanged. Merge hooks the same way as on Linux/macOS.
+
+- **Option 2 — PowerShell hooks:** Use `hooks/settings-hooks.windows.json`, a parallel configuration where every hook command is rewritten in PowerShell (`pwsh`). Merge it into `%USERPROFILE%\.claude\settings.json` instead of the bash version.
+
+See [`hooks/README.md`](hooks/README.md) for the full merge recipe, step-by-step installation instructions for both options, and a troubleshooting guide (tmux, md5sum, grep, bash `[[`).
 
 ---
 

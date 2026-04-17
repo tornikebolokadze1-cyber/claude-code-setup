@@ -1,0 +1,222 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # 1. Validate all JSON files (hooks config + template package.json files)
+  # ─────────────────────────────────────────────────────────────────────────
+  json-validate:
+    name: JSON Validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate hooks/settings-hooks.json with jq
+        run: jq empty hooks/settings-hooks.json
+
+      - name: Validate hooks/settings-hooks.json with Node.js
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('hooks/settings-hooks.json', 'utf8'));
+                   console.log('hooks/settings-hooks.json — OK');"
+
+      - name: Validate bootstrap-template package.json files
+        run: |
+          FAILED=0
+          for f in bootstrap-templates/*/package.json; do
+            if node -e "JSON.parse(require('fs').readFileSync('$f','utf8'));" 2>/dev/null; then
+              echo "  OK  $f"
+            else
+              echo "  FAIL  $f"
+              FAILED=$((FAILED+1))
+            fi
+          done
+          [ "$FAILED" -eq 0 ] || { echo "::error::$FAILED package.json file(s) failed JSON parse"; exit 1; }
+
+      - name: Validate any .vscode/settings.json and .claude/settings.json in templates
+        run: |
+          FAILED=0
+          # Collect all settings JSON files nested inside bootstrap-templates
+          while IFS= read -r -d '' f; do
+            if node -e "JSON.parse(require('fs').readFileSync('$f','utf8'));" 2>/dev/null; then
+              echo "  OK  $f"
+            else
+              echo "  FAIL  $f"
+              FAILED=$((FAILED+1))
+            fi
+          done < <(find bootstrap-templates -type f \( -path '*/.vscode/settings.json' -o -path '*/.claude/settings.json' \) -print0 2>/dev/null)
+          [ "$FAILED" -eq 0 ] || { echo "::error::$FAILED settings.json file(s) failed JSON parse"; exit 1; }
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 2. Lint all Markdown files
+  # ─────────────────────────────────────────────────────────────────────────
+  markdown-lint:
+    name: Markdown Lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Lint Markdown files
+        uses: DavidAnson/markdownlint-cli2-action@v19
+        with:
+          # Config is read from .markdownlint.jsonc at repo root automatically.
+          # Glob patterns cover: root *.md, rules/, commands/, template CLAUDE.md files.
+          globs: |
+            *.md
+            rules/**/*.md
+            commands/**/*.md
+            bootstrap-templates/*/CLAUDE.md
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 3. ShellCheck for install.sh and scripts/*.sh
+  # ─────────────────────────────────────────────────────────────────────────
+  shellcheck:
+    name: ShellCheck
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master
+        with:
+          # Warn on anything at "warning" severity or above (i.e. warnings + errors)
+          severity: warning
+          scandir: "."
+          # Only check these specific files rather than the whole tree
+          additional_files: "install.sh scripts/cleanup-backups.sh scripts/session-metrics.sh"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 4. Smoke-test each bootstrap template
+  #    - Node templates: npm install + npm run build
+  #    - Python templates: pip install (from requirements.txt or pyproject.toml)
+  # ─────────────────────────────────────────────────────────────────────────
+  template-smoke-node:
+    name: "Template smoke (Node) — ${{ matrix.template }}"
+    runs-on: ubuntu-latest
+    # continue-on-error allows us to see all results even if some templates are WIP
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        template:
+          - express-backend
+          - nextjs-webapp
+          - hybrid-code-n8n
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: bootstrap-templates/${{ matrix.template }}/package-lock.json
+
+      - name: Install dependencies (${{ matrix.template }})
+        working-directory: bootstrap-templates/${{ matrix.template }}
+        # --ignore-scripts prevents arbitrary lifecycle scripts from running in CI
+        run: npm install --ignore-scripts
+
+      - name: Build (${{ matrix.template }})
+        working-directory: bootstrap-templates/${{ matrix.template }}
+        # --if-present skips gracefully if no "build" script is defined
+        run: npm run --if-present build
+
+      - name: Report result
+        if: always()
+        run: echo "Template ${{ matrix.template }} — ${{ job.status }}"
+
+  template-smoke-python:
+    name: "Template smoke (Python) — ${{ matrix.template }}"
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # ai-agent: pyproject.toml only
+          - template: ai-agent
+            install_cmd: pip install -e ".[dev]" --no-build-isolation
+          # fastapi-backend: pyproject.toml only
+          - template: fastapi-backend
+            install_cmd: pip install -e ".[dev]" --no-build-isolation
+          # telegram-bot: has both requirements.txt and pyproject.toml; use requirements.txt
+          - template: telegram-bot
+            install_cmd: pip install -r requirements.txt
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+          cache-dependency-path: bootstrap-templates/${{ matrix.template }}/requirements.txt
+
+      - name: Install dependencies (${{ matrix.template }})
+        working-directory: bootstrap-templates/${{ matrix.template }}
+        run: ${{ matrix.install_cmd }}
+
+      - name: Report result
+        if: always()
+        run: echo "Template ${{ matrix.template }} — ${{ job.status }}"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # 5. Verify rule and hook counts match what README documents
+  # ─────────────────────────────────────────────────────────────────────────
+  rule-count-check:
+    name: Rule & Hook Count Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check rule file count matches README
+        run: |
+          ACTUAL=$(ls rules/ | wc -l)
+          # README should contain a line like "18 rule files"
+          README_COUNT=$(grep -oP '\d+(?= rule files)' README.md | head -1)
+
+          echo "Actual rule files : $ACTUAL"
+          echo "README claims     : ${README_COUNT:-<not found>}"
+
+          if [ -z "$README_COUNT" ]; then
+            echo "::warning::Could not find a '\d+ rule files' pattern in README.md — skipping count check"
+          elif [ "$ACTUAL" -ne "$README_COUNT" ]; then
+            echo "::error::Rule file count mismatch: found $ACTUAL files in rules/ but README.md says $README_COUNT"
+            exit 1
+          else
+            echo "Rule count OK ($ACTUAL)"
+          fi
+
+      - name: Check hook count matches README
+        run: |
+          # Count hooks using the same traversal as the spec
+          ACTUAL=$(node -e "
+            const h = JSON.parse(require('fs').readFileSync('hooks/settings-hooks.json', 'utf8'));
+            let c = 0;
+            for (const k of Object.keys(h.hooks || {})) {
+              for (const m of h.hooks[k] || []) {
+                for (const x of m.hooks || []) { c++; }
+              }
+            }
+            console.log(c);
+          ")
+          # README should contain a line like "11 automated hooks"
+          README_COUNT=$(grep -oP '\d+(?= automated hooks)' README.md | head -1)
+
+          echo "Actual hooks      : $ACTUAL"
+          echo "README claims     : ${README_COUNT:-<not found>}"
+
+          if [ -z "$README_COUNT" ]; then
+            echo "::warning::Could not find a '\d+ automated hooks' pattern in README.md — skipping count check"
+          elif [ "$ACTUAL" -ne "$README_COUNT" ]; then
+            echo "::error::Hook count mismatch: found $ACTUAL hooks in settings-hooks.json but README.md says $README_COUNT"
+            exit 1
+          else
+            echo "Hook count OK ($ACTUAL)"
+          fi

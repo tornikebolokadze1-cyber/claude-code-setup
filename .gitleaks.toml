@@ -1,0 +1,39 @@
+# .gitleaks.toml — secret scanning configuration for claude-code-setup-work
+# Uses gitleaks default ruleset; this file only adds an allowlist for
+# intentional placeholder/example values in template files.
+# Docs: https://github.com/gitleaks/gitleaks#configuration
+
+title = "claude-code-setup-work gitleaks config"
+
+[allowlist]
+  description = "Ignore known placeholder and example values in template/doc files"
+
+  # Paths that should never trigger alerts (regex, anchored to repo root)
+  paths = [
+    # .env.example files are explicitly meant to show key names with fake values
+    '''bootstrap-templates/[^/]+/\.env\.example''',
+    '''\.env\.example''',
+    # Skill documentation files may contain example key patterns
+    '''.*SKILL\.md''',
+    # Test fixtures and mock data
+    '''.*/__tests__/.*''',
+    '''.*\.test\.(ts|js|py)''',
+    '''.*\.spec\.(ts|js|py)''',
+  ]
+
+  # Regex patterns that, when matched against a secret candidate, suppress the alert.
+  # These match the literal placeholder text used in template/example files.
+  regexes = [
+    # Common placeholder patterns authors use in example configs
+    '''your[-_]?(api[-_]?)?key[-_]?here''',
+    '''your[-_]?(secret|token|password)[-_]?here''',
+    '''placeholder''',
+    '''example[-_]?(key|secret|token|password)?''',
+    '''changeme''',
+    '''change[-_]?this''',
+    '''replace[-_]?me''',
+    '''xxxx+''',
+    '''sk-[Xx]+''',         # OpenAI-style placeholder e.g. sk-XXXXXXXXXXXX
+    '''<YOUR_.+>''',         # angle-bracket placeholders <YOUR_API_KEY>
+    '''\$\{[A-Z_]+\}''',    # ${ENV_VAR} shell-style placeholders in docs
+  ]

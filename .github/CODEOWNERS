@@ -1,0 +1,10 @@
+# CODEOWNERS — all review requests route to the repo owner by default.
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+* @tornikebolokadze1-cyber
+
+/rules/                @tornikebolokadze1-cyber
+/hooks/                @tornikebolokadze1-cyber
+/commands/             @tornikebolokadze1-cyber
+/.github/              @tornikebolokadze1-cyber
+/bootstrap-templates/  @tornikebolokadze1-cyber

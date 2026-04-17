@@ -1,0 +1,14 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Report a Security Vulnerability
+    url: https://github.com/tornikebolokadze1-cyber/claude-code-setup/blob/main/SECURITY.md
+    about: >
+      Please do NOT open a public issue for security vulnerabilities.
+      Follow the instructions in SECURITY.md to report privately.
+
+  - name: Start a Discussion
+    url: https://github.com/tornikebolokadze1-cyber/claude-code-setup/discussions
+    about: >
+      Have a question or idea that doesn't fit a bug report or feature request?
+      Start a discussion instead.

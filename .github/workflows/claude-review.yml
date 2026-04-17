@@ -1,0 +1,91 @@
+name: Claude Code Review
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+permissions:
+  contents: read
+  pull-requests: write
+  issues: write
+
+jobs:
+  review:
+    name: Claude Automated Code Review
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check for ANTHROPIC_API_KEY secret
+        # Exit cleanly (0) when the secret is absent so fork PRs and contributors
+        # without repo access don't see a hard CI failure.
+        id: api-key-check
+        env:
+          HAS_KEY: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+        run: |
+          if [ "$HAS_KEY" != "true" ]; then
+            echo "ANTHROPIC_API_KEY secret is not set — skipping Claude review."
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "skip=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Checkout PR
+        if: steps.api-key-check.outputs.skip == 'false'
+        uses: actions/checkout@v4
+
+      - name: Run Claude Code Review
+        if: steps.api-key-check.outputs.skip == 'false'
+        uses: anthropics/claude-code-action@v1
+        with:
+          # ── Review instructions ────────────────────────────────────────────
+          # Claude reviews the PR diff against the project's own standards.
+          # The rules/ directory is the source of truth for what "good" looks like.
+          prompt: |
+            You are reviewing a pull request on the claude-code-setup-work repository,
+            a Claude Code base-setup template. Please review the diff against the
+            following criteria and post a structured review comment.
+
+            **1. Security (rules/security.md & rules/06-destructive-actions.md)**
+            - Flag any hook, script, or command that runs untrusted user input.
+            - Flag any pattern that could leak secrets (hardcoded keys, tokens in logs).
+            - Check that no new .env example file accidentally contains real credentials.
+
+            **2. Production standards (rules/16-production-standards.md)**
+            - Functions under 50 lines; files under 800 lines.
+            - No hardcoded config values; no console.log/print in production paths.
+            - Immutability patterns applied where relevant.
+
+            **3. README consistency**
+            - If rules/ files were added or removed, does README still show the correct count?
+              Pattern to look for: "\d+ rule files".
+            - If hooks/settings-hooks.json was changed, does the hook count still match?
+              Pattern to look for: "\d+ automated hooks".
+            - If bootstrap-templates/ changed, does README reflect the current template list?
+
+            **4. Shell portability (install.sh, scripts/*.sh)**
+            - Bash + POSIX portability; call out any Windows-incompatible constructs.
+            - No use of bashisms when #!/bin/sh is declared.
+            - Proper quoting of variables.
+
+            **5. JSON validity**
+            - hooks/settings-hooks.json must be valid JSON.
+            - Any modified package.json or settings.json must be valid JSON.
+
+            **6. Template integrity**
+            - bootstrap-templates should remain self-contained.
+            - No template should reference secrets from the parent repo.
+            - package.json / pyproject.toml / requirements.txt changes should be intentional.
+
+            Please structure your review as:
+            - **Summary**: 1–3 sentences on overall quality.
+            - **Issues** (if any): numbered list, severity [CRITICAL / HIGH / MEDIUM / LOW].
+            - **Suggestions** (optional): improvements that are not blockers.
+            - **Verdict**: APPROVE / REQUEST_CHANGES / COMMENT.
+
+          # Limit tools to read-only operations + git diff for safety
+          claude_args: "--max-turns 8 --allowed-tools Read,Grep,Glob,Bash(git diff:*)"
+
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}

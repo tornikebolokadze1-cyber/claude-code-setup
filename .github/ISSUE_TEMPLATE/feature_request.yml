@@ -1,0 +1,60 @@
+name: Feature Request
+description: Propose a new rule, hook, bootstrap template, command, or other improvement.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before submitting, search [existing issues](https://github.com/tornikebolokadze1-cyber/claude-code-setup/issues)
+        and [discussions](https://github.com/tornikebolokadze1-cyber/claude-code-setup/discussions)
+        to avoid duplicates.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem statement
+      description: What problem does this feature solve? Who is affected and how often?
+      placeholder: "When I ... I have to ... which is painful because ..."
+    validations:
+      required: true
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: What should the new rule / hook / template / command look like? Be as specific as you can.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: What other approaches did you consider, and why did you rule them out?
+    validations:
+      required: false
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Scope
+      description: Which part of the repo does this affect?
+      options:
+        - Rule (rules/)
+        - Hook (hooks/settings-hooks.json)
+        - Bootstrap template (bootstrap-templates/)
+        - Slash command (commands/)
+        - Install script (install.sh)
+        - CI / GitHub Actions
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Links, references, screenshots, or anything else that might help.
+    validations:
+      required: false

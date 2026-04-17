@@ -1,0 +1,24 @@
+{
+  // markdownlint configuration for claude-code-setup-work
+  // Relaxed ruleset — keeps things readable without being pedantic.
+  // Full rule reference: https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+  // ── Disabled rules (too noisy for template/docs content) ─────────────────
+  "MD013": false,   // line-length   — long lines are fine in rules/commands
+  "MD033": false,   // no-inline-html — HTML is allowed in templates
+  "MD041": false,   // first-line-h1 — CLAUDE.md files don't always start with H1
+  "MD024": false,   // no-duplicate-heading — same heading in different sections is OK
+
+  // ── Enabled rules ─────────────────────────────────────────────────────────
+  "MD001": true,    // heading-increment — headings must not skip levels
+  "MD003": {        // heading-style — enforce consistent heading style
+    "style": "atx"
+  },
+  "MD018": true,    // no-missing-space-atx — space required after # in ATX headings
+  "MD022": true,    // blanks-around-headings — blank lines around headings
+  "MD023": true,    // headings-start-left — headings must start at left margin
+  "MD025": true,    // single-title — at most one top-level heading per file (if present)
+  "MD030": true,    // list-marker-space — consistent space after list markers
+  "MD034": true,    // no-bare-urls — bare URLs should be wrapped in angle brackets or links
+  "MD047": true     // single-trailing-newline — files must end with a single newline
+}
