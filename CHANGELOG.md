@@ -51,6 +51,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `docs/branch-protection.md` + `docs/branch-protection.json` — UI + API setup for main-branch protection
 - `.gitignore` files for all 7 bootstrap templates (previously 3 were missing: `express-backend`, `hybrid-code-n8n`, `n8n-workflow`, `telegram-bot`)
 
+### Added (round 4 — autopilot)
+- SHA-pinning: all 19 GitHub Actions  refs now pin specific commit SHAs with version comments (actions/checkout v4.2.2, setup-node v4.4.0, setup-python v5.6.0, markdownlint-cli2-action v19.1.0, shellcheck 2.0.0, gitleaks v2.3.9, claude-code-action v1.0.99)
+- CLAUDE.md for 5 bootstrap templates that previously lacked one (ai-agent, express-backend, fastapi-backend, nextjs-webapp, telegram-bot); hybrid-code-n8n and n8n-workflow already had them
+-  field in express-backend and nextjs-webapp package.json (>=20)
+
+### Changed (round 4)
+-  pyproject.toml: python-telegram-bot lower bound bumped to >=21.6 (old versions had CVE)
+
 ### Fixed
 - README hook count (was `7 automated hooks`, now `11`)
 - `install.sh` previously skipped `commands/setup-phases/` — now copies recursively

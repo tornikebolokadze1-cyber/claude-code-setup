@@ -21,7 +21,7 @@ jobs:
     name: Install smoke test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Run install.sh
         run: |
@@ -116,7 +116,7 @@ jobs:
     name: Hook JSON merge (jq smoke)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Merge hooks/settings-hooks.json into a sample settings.json
         run: |
@@ -148,7 +148,7 @@ jobs:
     name: Bootstrap templates have .gitignore
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Assert every template directory contains a .gitignore
         run: |
@@ -177,7 +177,7 @@ jobs:
     name: Rule files under 400 lines
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: Check line counts in rules/
         run: |
@@ -205,7 +205,7 @@ jobs:
     name: Phase split integrity
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
 
       - name: commands/setup.md must be under 100 lines
         run: |

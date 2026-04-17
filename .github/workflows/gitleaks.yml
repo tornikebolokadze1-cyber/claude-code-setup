@@ -18,14 +18,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout (full history for scheduled/history scans)
-        uses: actions/checkout@v4
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
         with:
           # fetch-depth: 0 ensures gitleaks can scan the full git history,
           # not just the tip commit. Required for scheduled runs.
           fetch-depth: 0
 
       - name: Run Gitleaks
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@ff98106e4c7b2bc287b24eaf42907196329070c7  # v2.3.9
         env:
           # GITLEAKS_LICENSE is only required for private organisational repos.
           # For public personal repos this env var can be absent — gitleaks-action
