@@ -54,8 +54,17 @@ write_manifest() {
   done
   list_json="${list_json%,}"
 
+  # On Windows Git Bash, MSYS paths like /c/Users/... are passed to Node as literal
+  # strings and interpreted relative to the CWD instead of as absolute C:\ paths.
+  # Resolve via os.homedir() inside Node so the write lands at the correct spot.
+  local manifest_basename
+  manifest_basename="$(basename "$MANIFEST_FILE")"
   node -e "
 const fs = require('fs');
+const os = require('os');
+const path = require('path');
+const home = os.homedir();
+const manifestPath = path.join(home, '.claude', '${manifest_basename}');
 const manifest = {
   version: '${VERSION}',
   git_commit: '${GIT_HASH}',
@@ -63,7 +72,8 @@ const manifest = {
   source_path: '${SCRIPT_DIR}',
   files: [${list_json}]
 };
-fs.writeFileSync('${MANIFEST_FILE}', JSON.stringify(manifest, null, 2) + '\n');
+fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2) + '\n');
+console.log('Manifest written:', manifestPath);
 "
-  chmod 0644 "$MANIFEST_FILE"
+  chmod 0644 "$MANIFEST_FILE" 2>/dev/null || true
 }
