@@ -13,6 +13,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      github-actions-updates:
+        patterns:
+          - "*"
 
   # ── npm templates ───────────────────────────────────────────────────────────
   - package-ecosystem: "npm"
@@ -26,6 +32,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      express-backend-npm-updates:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/bootstrap-templates/nextjs-webapp"
@@ -38,6 +50,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      nextjs-webapp-npm-updates:
+        patterns:
+          - "*"
 
   - package-ecosystem: "npm"
     directory: "/bootstrap-templates/hybrid-code-n8n"
@@ -50,6 +68,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      hybrid-code-n8n-npm-updates:
+        patterns:
+          - "*"
 
   # ── pip templates ───────────────────────────────────────────────────────────
   - package-ecosystem: "pip"
@@ -63,6 +87,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      ai-agent-pip-updates:
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/bootstrap-templates/fastapi-backend"
@@ -75,6 +105,12 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      fastapi-backend-pip-updates:
+        patterns:
+          - "*"
 
   - package-ecosystem: "pip"
     directory: "/bootstrap-templates/telegram-bot"
@@ -87,3 +123,9 @@ updates:
     labels:
       - "dependencies"
       - "automated"
+    commit-message:
+      prefix: "deps"
+    groups:
+      telegram-bot-pip-updates:
+        patterns:
+          - "*"

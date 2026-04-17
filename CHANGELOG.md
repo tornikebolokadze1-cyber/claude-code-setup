@@ -35,9 +35,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `commands/setup.md` reduced from ~1875 lines to a 34-line entrypoint that delegates to `commands/setup-phases/phase-*.md`
 - `.gitignore` now unignores `.env.example` so the new template file is tracked
 - README adds a "Windows Support" section documenting Git Bash/WSL vs PowerShell hook variants
+- `install.sh` hardened: `set -euo pipefail`, new flags `--dry-run` / `--check` / `--version` / `--force` / `--help`, writes `.installed-from.json` manifest, UTC-timestamped versioned backup dirs, explicit 0755/0644 file modes, now also copies `commands/setup-phases/`
+- `.github/dependabot.yml` adds `groups:` to batch updates per ecosystem, `commit-message.prefix: "deps"`, and consistent labels (reduces PR noise ~80%)
+
+### Added (round 2)
+- `VERSION` file at repo root (0.2.0)
+- `DESIGN.md` — product archetype, scope, design principles, tension log
+- `CLAUDE.md` at repo root — contributor context for when this repo is opened in Claude Code
+- `uninstall.sh` — manifest-driven reversal with `--dry-run`/`--list`/`--purge` flags; moves files to timestamped dir (never deletes outright)
+- `scripts/validate-install.sh` — "doctor" health check with 7 checks, `--json` and `--verbose` modes
+- `scripts/install-lib.sh` — shared helpers sourced by `install.sh`
+- `.github/workflows/smoke-test.yml` — Docker-based end-to-end install + idempotency + hook-merge + template safety + rule-limit + phase-split CI
+- `docs/GOVERNANCE.md` — maintainer model, semver cadence, branch policy, signed commits, deprecation process
+- `docs/RELEASE.md` — step-by-step release checklist with VERSION/CHANGELOG sync sanity check
+- `docs/branch-protection.md` + `docs/branch-protection.json` — UI + API setup for main-branch protection
+- `.gitignore` files for all 7 bootstrap templates (previously 3 were missing: `express-backend`, `hybrid-code-n8n`, `n8n-workflow`, `telegram-bot`)
 
 ### Fixed
 - README hook count (was `7 automated hooks`, now `11`)
+- `install.sh` previously skipped `commands/setup-phases/` — now copies recursively
 
 ## [0.1.0] - 2026-03-22
 

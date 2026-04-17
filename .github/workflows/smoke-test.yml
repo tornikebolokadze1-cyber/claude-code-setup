@@ -1,0 +1,235 @@
+name: Smoke Test
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+  schedule:
+    # Every Tuesday at 04:00 UTC
+    - cron: "0 4 * * 2"
+
+permissions:
+  contents: read
+
+jobs:
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 1: Run install.sh in a disposable home and verify the result
+  # ─────────────────────────────────────────────────────────────────────────
+  install-smoke:
+    name: Install smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run install.sh
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          mkdir -p "$HOME"
+          bash install.sh
+
+      - name: 1 – exit code was 0 (implicit from previous step)
+        run: echo "Install exited 0 — OK"
+
+      - name: 2 – rules/ contains exactly 18 files
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          count=$(find "$HOME/.claude/rules" -maxdepth 1 -name "*.md" | wc -l | tr -d ' ')
+          echo "rules/ file count: $count"
+          if [ "$count" -ne 18 ]; then
+            echo "ERROR: expected 18 rule files, got $count"
+            exit 1
+          fi
+
+      - name: 3 – commands/setup.md exists
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          test -f "$HOME/.claude/commands/setup.md" || {
+            echo "ERROR: ~/.claude/commands/setup.md not found"
+            exit 1
+          }
+          echo "commands/setup.md — OK"
+
+      # NOTE: install.sh currently copies only commands/setup.md and does NOT
+      # copy commands/setup-phases/.  This assertion will fail until install.sh
+      # is updated to also copy the phase bodies.  That gap is intentional —
+      # this CI is the canary.
+      - name: 4 – commands/setup-phases/phase-{0,1,2}.md exist
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          for phase in 0 1 2; do
+            target="$HOME/.claude/commands/setup-phases/phase-${phase}.md"
+            test -f "$target" || {
+              echo "ERROR: $target not found — install.sh does not yet copy setup-phases/"
+              exit 1
+            }
+            echo "phase-${phase}.md — OK"
+          done
+
+      - name: 5 – scripts exist and pass bash -n
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          for script in cleanup-backups.sh session-metrics.sh; do
+            path="$HOME/.claude/scripts/$script"
+            test -f "$path" || { echo "ERROR: $path not found"; exit 1; }
+            bash -n "$path" || { echo "ERROR: $path has syntax errors"; exit 1; }
+            echo "$script — OK"
+          done
+
+      - name: 6 – re-running install.sh is idempotent and creates a backup
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          # Second run must succeed without errors
+          bash install.sh
+          # A backup dir must now exist (the second run sees the first install)
+          backup_count=$(find "$HOME/.claude" -maxdepth 1 -type d -name "backup-*" | wc -l | tr -d ' ')
+          echo "Backup dirs found: $backup_count"
+          if [ "$backup_count" -lt 1 ]; then
+            echo "ERROR: second run did not create a backup directory"
+            exit 1
+          fi
+          echo "Idempotency check — OK"
+
+      - name: 7 – no world-writable files
+        run: |
+          set -euo pipefail
+          export HOME="$GITHUB_WORKSPACE/.claude-test-home"
+          bad=$(find "$HOME/.claude" -perm /o+w -type f)
+          if [ -n "$bad" ]; then
+            echo "ERROR: world-writable files found:"
+            echo "$bad"
+            exit 1
+          fi
+          echo "No world-writable files — OK"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 2: Prove the jq hook-merge snippet from CONTRIBUTING.md works
+  # ─────────────────────────────────────────────────────────────────────────
+  hook-json-merge:
+    name: Hook JSON merge (jq smoke)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Merge hooks/settings-hooks.json into a sample settings.json
+        run: |
+          set -euo pipefail
+
+          # Build a minimal sample settings.json
+          sample='{"theme":"dark","model":"claude-opus-4"}'
+
+          # Perform the merge exactly as documented in CONTRIBUTING.md
+          result=$(echo "$sample" | jq --slurpfile hooks hooks/settings-hooks.json '. * $hooks[0]')
+
+          # Assertions
+          echo "$result" | jq -e '.hooks' > /dev/null || {
+            echo "ERROR: merged output has no .hooks key"
+            exit 1
+          }
+          echo "$result" | jq -e '.theme == "dark"' > /dev/null || {
+            echo "ERROR: merged output lost original .theme key"
+            exit 1
+          }
+          echo "Hook JSON merge — OK"
+          echo "Merged result keys:"
+          echo "$result" | jq 'keys'
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 3: Every bootstrap template must have a .gitignore
+  # ─────────────────────────────────────────────────────────────────────────
+  templates-have-gitignore:
+    name: Bootstrap templates have .gitignore
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Assert every template directory contains a .gitignore
+        run: |
+          set -euo pipefail
+          missing=()
+          for template_dir in bootstrap-templates/*/; do
+            name=$(basename "$template_dir")
+            if [ ! -f "${template_dir}.gitignore" ]; then
+              missing+=("$name")
+            fi
+          done
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "ERROR: the following templates are missing a .gitignore:"
+            printf '  - %s\n' "${missing[@]}"
+            echo ""
+            echo "A missing .gitignore risks secret leaks in projects scaffolded from these templates."
+            echo "Add a stack-appropriate .gitignore to each template directory listed above."
+            exit 1
+          fi
+          echo "All template directories have a .gitignore — OK"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 4: No rule file exceeds 400 lines
+  # ─────────────────────────────────────────────────────────────────────────
+  rules-under-limit:
+    name: Rule files under 400 lines
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check line counts in rules/
+        run: |
+          set -euo pipefail
+          violations=()
+          for f in rules/*.md; do
+            lines=$(wc -l < "$f")
+            if [ "$lines" -gt 400 ]; then
+              violations+=("$f ($lines lines)")
+            fi
+          done
+          if [ ${#violations[@]} -gt 0 ]; then
+            echo "ERROR: rule files exceeding 400-line limit:"
+            printf '  %s\n' "${violations[@]}"
+            echo ""
+            echo "Split the file(s) above into smaller, focused rule files."
+            exit 1
+          fi
+          echo "All rule files are within the 400-line limit — OK"
+
+  # ─────────────────────────────────────────────────────────────────────────
+  # Job 5: Phase split integrity
+  # ─────────────────────────────────────────────────────────────────────────
+  phase-split-integrity:
+    name: Phase split integrity
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: commands/setup.md must be under 100 lines
+        run: |
+          set -euo pipefail
+          lines=$(wc -l < commands/setup.md)
+          echo "commands/setup.md: $lines lines"
+          if [ "$lines" -ge 100 ]; then
+            echo "ERROR: commands/setup.md has $lines lines (limit: <100)."
+            echo "Move detailed content into commands/setup-phases/phase-*.md"
+            exit 1
+          fi
+          echo "commands/setup.md is under 100 lines — OK"
+
+      - name: Phase bodies must total at least 1500 lines
+        run: |
+          set -euo pipefail
+          total=$(wc -l commands/setup-phases/phase-0.md \
+                       commands/setup-phases/phase-1.md \
+                       commands/setup-phases/phase-2.md \
+                 | tail -1 | awk '{print $1}')
+          echo "Total lines across phase-0/1/2: $total"
+          if [ "$total" -lt 1500 ]; then
+            echo "ERROR: phase bodies total only $total lines (minimum: 1500)."
+            echo "Phase files appear incomplete or have been trimmed."
+            exit 1
+          fi
+          echo "Phase bodies total $total lines (>= 1500) — OK"
