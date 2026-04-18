@@ -19,6 +19,7 @@ __pycache__/
 # Logs
 *.log
 
-# Environment
+# Environment — keep .env.example (template guidance)
 .env
-.env.*
+.env.local
+.env.*.local

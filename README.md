@@ -1,5 +1,9 @@
 # Claude Code Production Setup
 
+[![CI](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml/badge.svg)](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.x-blue.svg)](CHANGELOG.md)
+
 A complete, production-grade configuration system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's official AI coding assistant.
 
 **This is not a CLI tool.** It's a configuration layer that installs into your `~/.claude/` directory and gives Claude Code production-level rules, safety guardrails, automated hooks, and a `/setup-AI-Pulse-Georgia` slash command that bootstraps any new project in under a minute.
@@ -235,7 +239,8 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## Bootstrap Templates
 
-7 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack:
+7 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack.
+Every template ships with **CLAUDE.md** (project-specific Claude instructions) and **.env.example** (environment variable reference):
 
 ### Next.js Web App
 ```
@@ -306,6 +311,35 @@ src/               ← Application code
 workflows/         ← n8n workflow files
 docs/              ← Architecture showing code ↔ n8n connection
 ```
+
+---
+
+## Maintenance
+
+### Sync verification
+
+After editing any rule, template, or script in your local `~/.claude/` directory, run:
+
+```bash
+./scripts/verify-local-sync.sh
+```
+
+This performs a byte-level diff (CRLF-normalised) between your local `~/.claude/` and the
+repo, then reports three categories:
+
+| Category | Meaning |
+|---|---|
+| `MISSING_IN_REPO` | File exists locally but not in the repo — needs to be committed |
+| `MISSING_IN_LOCAL` | File exists in the repo but not locally — run `./install.sh` to fix |
+| `CONTENT_DIFFER` | File exists in both but content differs — decide which side is the source of truth |
+
+Exits **0** when clean, **1** when any drift is detected. Use `--fix=push` for a dry-run
+list of copy commands that would push local changes back to the repo:
+
+```bash
+./scripts/verify-local-sync.sh . ~/.claude --fix=push
+```
+
 
 ---
 

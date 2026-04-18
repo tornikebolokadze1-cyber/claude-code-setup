@@ -1,0 +1,69 @@
+name: CI
+
+on:
+  push:
+    branches: ["main", "feat/**", "fix/**", "hotfix/**"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  lint-and-check:
+    name: Lint & Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Set up Python 3.13
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      # --- Shell lint ---
+      - name: Install shellcheck
+        run: sudo apt-get install -y shellcheck
+
+      - name: Shellcheck install.sh and scripts/
+        run: |
+          shellcheck install.sh
+          shellcheck scripts/*.sh
+
+      # --- Markdown lint ---
+      - name: Install markdownlint-cli2
+        run: npm install -g markdownlint-cli2
+
+      - name: Markdownlint rules/ commands/ bootstrap-templates/
+        run: |
+          markdownlint-cli2 "rules/**/*.md" "commands/**/*.md" "bootstrap-templates/**/*.md" || true
+
+      # --- Secret scan ---
+      - name: Secret scan (gitleaks)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # --- No large files ---
+      - name: Check for large files (>1MB)
+        run: |
+          LARGE=$(find . -not -path './.git/*' -size +1M)
+          if [ -n "$LARGE" ]; then
+            echo "ERROR: Large files found:"
+            echo "$LARGE"
+            exit 1
+          fi
+          echo "No large files found."
+
+      # --- Local sync verifier (optional, only when VERIFY_REF is set) ---
+      - name: Verify local sync (optional)
+        if: ${{ env.VERIFY_REF != '' }}
+        run: |
+          chmod +x scripts/verify-local-sync.sh
+          ./scripts/verify-local-sync.sh .
+        env:
+          VERIFY_REF: ${{ vars.VERIFY_REF }}
