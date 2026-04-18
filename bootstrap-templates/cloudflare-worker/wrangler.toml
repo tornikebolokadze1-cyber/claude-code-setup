@@ -1,0 +1,33 @@
+name = "{{PROJECT_NAME}}"
+main = "src/index.ts"
+compatibility_date = "2026-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Replace with your actual account ID (find it in the Cloudflare dashboard)
+# account_id = "your-account-id-here"
+
+# ─── KV Namespace (uncomment to enable) ──────────────────────────────────────
+# [[kv_namespaces]]
+# binding = "KV"
+# id = "your-kv-namespace-id"
+# preview_id = "your-kv-namespace-preview-id"
+
+# ─── D1 Database (uncomment to enable) ───────────────────────────────────────
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "my-database"
+# database_id = "your-d1-database-id"
+
+# ─── R2 Bucket (uncomment to enable) ─────────────────────────────────────────
+# [[r2_buckets]]
+# binding = "BUCKET"
+# bucket_name = "my-bucket"
+
+# ─── Environment variables (non-secret) ──────────────────────────────────────
+[vars]
+ENVIRONMENT = "production"
+
+# ─── Local dev overrides ─────────────────────────────────────────────────────
+[dev]
+port = 8787
+local_protocol = "http"

@@ -32,13 +32,15 @@ Install this once. Every project gets production infrastructure from day one.
 │   ├── 02-scope-control.md
 │   ├── ...
 │   └── security.md
-├── bootstrap-templates/  ← 7 project starter templates
+├── bootstrap-templates/  ← 9 project starter templates
 │   ├── nextjs-webapp/
 │   ├── fastapi-backend/
 │   ├── express-backend/
 │   ├── ai-agent/
 │   ├── telegram-bot/
 │   ├── n8n-workflow/
+│   ├── vite-spa/
+│   ├── cloudflare-worker/
 │   └── hybrid-code-n8n/
 ├── scripts/              ← Utility scripts
 └── settings.json         ← Hooks configuration (merge manually)
@@ -239,8 +241,9 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## Bootstrap Templates
 
-7 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack.
-Every template ships with **CLAUDE.md** (project-specific Claude instructions) and **.env.example** (environment variable reference):
+9 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack.
+Every template ships with **CLAUDE.md** (project-specific Claude instructions) and **.env.example** (environment variable reference).
+See [bootstrap-templates/README.md](bootstrap-templates/README.md) for a decision tree and feature matrix:
 
 ### Next.js Web App
 ```
@@ -311,6 +314,29 @@ src/               ← Application code
 workflows/         ← n8n workflow files
 docs/              ← Architecture showing code ↔ n8n connection
 ```
+### Vite SPA
+```
+src/
+  ├── routes/      <- Page components (Home, About, NotFound)
+  ├── components/  <- Reusable UI primitives (Button with tests)
+  ├── hooks/       <- Data-fetching hooks (use-fetch)
+  ├── lib/         <- Typed API client + env validation
+  └── types/       <- Shared TypeScript types
+```
+Stack: React 19 + Vite 6 + TypeScript + React Router 7 + Vitest 3 + Testing Library
+
+### Cloudflare Worker
+```
+src/
+  ├── routes/      <- Endpoint handlers (health, webhook)
+  ├── lib/         <- Router + JSON response helpers
+  └── middleware/  <- CORS + request logging
+wrangler.toml      <- Wrangler 4 config (compat date, KV/D1 stubs)
+```
+Stack: TypeScript + Wrangler 4 + Vitest (workers pool) + HMAC webhook stub
+
+See [bootstrap-templates/README.md](./bootstrap-templates/README.md) for the full decision tree and feature matrix.
+
 
 ---
 

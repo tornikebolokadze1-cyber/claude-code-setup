@@ -22,12 +22,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `rules/README.md`: rule index by category with layering explanation (why 01/07, 04/11, 10/11 redundancy is intentional)
 - `rules/18-observability.md`: three pillars baseline (metrics/logs/traces), structured logging schema, RED+USE methods, alert tiers, April 2026 tooling (OTel, Prometheus, Sentry, Axiom)
 - `rules/19-api-versioning.md`: SemVer scheme, URL vs header strategies, deprecation policy, Sunset headers, GraphQL field-level deprecation, webhook pinning, SDK alignment
+- `bootstrap-templates/vite-spa/` — React 19 + Vite 6 + TS 5.7 SPA with Vitest 3 + Testing Library + ESLint 9 flat config, production-ready
+- `bootstrap-templates/cloudflare-worker/` — TS Worker + Wrangler 4 (compat date 2026-04-01), typed routing, CORS + logging middleware, HMAC webhook stub, Vitest + workers pool
+- `bootstrap-templates/README.md` — decision tree, feature matrix, stability labels, Phase-2 roadmap
 
 ### Changed
 - .gitignore: narrowed .env.* to .env.local + .env.*.local so .env.example is tracked correctly
 - install.sh: now copies .env.example and per-template CLAUDE.md; copies verify-local-sync.sh
 - README.md: CI/License/Version badges; Bootstrap Templates notes CLAUDE.md + .env.example;
-  added Maintenance/sync-verification section; rule count 18 -> 20 + index
+  added Maintenance/sync-verification section; rule count 18 -> 20 + index; templates 7 -> 9
 
 ### Bumped
 - express-backend: added engines.node >=20
