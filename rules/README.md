@@ -53,9 +53,11 @@ All four are loaded simultaneously so Claude can switch within a polyglot repo.
 | `13-typescript-standards.md` | Types, React patterns, immutability, Zod validation, Vitest |
 | `14-python-standards.md` | Pydantic, dataclasses, pytest, async patterns, ruff/black |
 | `15-go-standards.md` | Interfaces, error wrapping, table-driven tests, `-race`, errgroup |
+| `20-rust-standards.md` | Rust 1.85, cargo fmt/clippy, thiserror+anyhow, typestate, Tokio 1.40, AFIT, cargo audit+deny |
+| `21-swift-standards.md` | Swift 6.1 strict concurrency, SwiftUI @Observable, Swift Testing, MVVM, SPM, iOS 17+ |
 
-> Rust, Swift, and Kotlin standards are planned for Phase 2. Until then, apply
-> `16-production-standards.md` as the language-agnostic fallback.
+> Kotlin standards are planned for a later release. Until then, apply
+> `16-production-standards.md` as the language-agnostic fallback for Kotlin/JVM projects.
 
 ### Layer 5 — Production Hygiene
 
@@ -152,8 +154,8 @@ with `CLAUDE.md`, `CLAUDE.md` wins — it is the user's personal override layer.
 
 ## Adding a New Rule
 
-1. Determine the highest current `NN` (currently `19`).
-2. Create `rules/20-your-rule-name.md`.
+1. Determine the highest current `NN` (currently `21`).
+2. Create `rules/22-your-rule-name.md`.
 3. Follow the idiom: short intro → mandatory rules → examples → what-not-to-do.
 4. Add it to the appropriate layer table in this index.
 5. Update `CHANGELOG.md` under `[Unreleased]`.
