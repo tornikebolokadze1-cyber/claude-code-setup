@@ -1,0 +1,9 @@
+# Wrangler local secrets — copy to .dev.vars (never commit .dev.vars)
+# In production, set these with: npx wrangler secret put SECRET_NAME
+
+# HMAC secret for webhook signature verification
+WEBHOOK_SECRET=dev-secret-change-me
+
+# Add other secrets your Worker needs:
+# DATABASE_URL=...
+# API_KEY=...
