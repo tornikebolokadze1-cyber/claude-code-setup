@@ -19,21 +19,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - scripts/verify-local-sync.sh: byte-level drift detector (CRLF-normalised);
   reports MISSING_IN_REPO, MISSING_IN_LOCAL, CONTENT_DIFFER; supports --fix=push dry-run
 - scripts/README.md: documents all scripts in scripts/
+- `rules/README.md`: rule index by category with layering explanation (why 01/07, 04/11, 10/11 redundancy is intentional)
+- `rules/18-observability.md`: three pillars baseline (metrics/logs/traces), structured logging schema, RED+USE methods, alert tiers, April 2026 tooling (OTel, Prometheus, Sentry, Axiom)
+- `rules/19-api-versioning.md`: SemVer scheme, URL vs header strategies, deprecation policy, Sunset headers, GraphQL field-level deprecation, webhook pinning, SDK alignment
 
 ### Changed
 - .gitignore: narrowed .env.* to .env.local + .env.*.local so .env.example is tracked correctly
 - install.sh: now copies .env.example and per-template CLAUDE.md; copies verify-local-sync.sh
 - README.md: CI/License/Version badges; Bootstrap Templates notes CLAUDE.md + .env.example;
-  added Maintenance/sync-verification section
+  added Maintenance/sync-verification section; rule count 18 -> 20 + index
 
 ### Bumped
 - express-backend: added engines.node >=20
 - nextjs-webapp: added engines.node >=20
 - telegram-bot: python-telegram-bot bumped from >=20.7,<22 to >=21.6,<22
 
-### Out of scope (parallel PRs)
-- New templates (Agent Gamma / PR #7)
-- New rules and rules/README.md (Agent Beta / PR #6)
+---
 
 ## [0.2.0] - 2026-04-18
 
