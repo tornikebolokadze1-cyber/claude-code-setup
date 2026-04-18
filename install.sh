@@ -30,9 +30,9 @@ done
 if [ "$NEEDS_BACKUP" = true ]; then
   echo "Backing up existing config to $BACKUP_DIR..."
   mkdir -p "$BACKUP_DIR"
-  [ -d "$CLAUDE_DIR/rules" ] && cp -r "$CLAUDE_DIR/rules" "$BACKUP_DIR/" 2>/dev/null || true
+  [ -d "$CLAUDE_DIR/rules" ]    && cp -r "$CLAUDE_DIR/rules"    "$BACKUP_DIR/" 2>/dev/null || true
   [ -d "$CLAUDE_DIR/commands" ] && cp -r "$CLAUDE_DIR/commands" "$BACKUP_DIR/" 2>/dev/null || true
-  [ -d "$CLAUDE_DIR/scripts" ] && cp -r "$CLAUDE_DIR/scripts" "$BACKUP_DIR/" 2>/dev/null || true
+  [ -d "$CLAUDE_DIR/scripts" ]  && cp -r "$CLAUDE_DIR/scripts"  "$BACKUP_DIR/" 2>/dev/null || true
   echo "  Backup saved."
 fi
 
@@ -50,18 +50,20 @@ cp "$SCRIPT_DIR"/commands/setup-phases/*.md "$CLAUDE_DIR/commands/setup-phases/"
 cp "$SCRIPT_DIR"/commands/setup.md "$CLAUDE_DIR/commands/"
 echo "  /setup-AI-Pulse-Georgia command installed (+ phase files + deprecation alias)."
 
-# Copy scripts
+# Copy scripts (including verify-local-sync.sh)
 echo "Installing scripts..."
 mkdir -p "$CLAUDE_DIR/scripts"
 cp "$SCRIPT_DIR"/scripts/*.sh "$CLAUDE_DIR/scripts/"
 chmod +x "$CLAUDE_DIR/scripts/"*.sh
-echo "  Scripts installed."
+echo "  Scripts installed ($(ls "$SCRIPT_DIR"/scripts/*.sh | wc -l | tr -d ' ') files)."
+echo "  verify-local-sync.sh is now available at: $CLAUDE_DIR/scripts/verify-local-sync.sh"
 
-# Copy bootstrap templates
+# Copy bootstrap templates (including CLAUDE.md and .env.example per template)
 echo "Installing bootstrap templates..."
 mkdir -p "$CLAUDE_DIR/bootstrap-templates"
 cp -r "$SCRIPT_DIR"/bootstrap-templates/* "$CLAUDE_DIR/bootstrap-templates/"
 echo "  $(ls -d "$SCRIPT_DIR"/bootstrap-templates/*/ | wc -l | tr -d ' ') templates installed."
+echo "  Each template includes: CLAUDE.md, .env.example, STRUCTURE.md"
 
 # Hooks notice
 echo ""
@@ -79,10 +81,15 @@ echo ""
 echo "Installed:"
 echo "  Rules:     $CLAUDE_DIR/rules/ ($(ls "$CLAUDE_DIR/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') files)"
 echo "  Command:   $CLAUDE_DIR/commands/setup-AI-Pulse-Georgia.md (+ setup-phases/)"
-echo "  Scripts:   $CLAUDE_DIR/scripts/"
+echo "  Scripts:   $CLAUDE_DIR/scripts/ ($(ls "$CLAUDE_DIR/scripts/"*.sh 2>/dev/null | wc -l | tr -d ' ') files)"
 echo "  Templates: $CLAUDE_DIR/bootstrap-templates/ ($(ls -d "$CLAUDE_DIR/bootstrap-templates/"*/ 2>/dev/null | wc -l | tr -d ' ') templates)"
 echo ""
-echo "Usage: Open Claude Code and type /setup-AI-Pulse-Georgia to bootstrap a new project."
-echo "       (Legacy alias: /setup — deprecated, use /setup-AI-Pulse-Georgia instead)"
+echo "Usage:"
+echo "  Primary:    /setup-AI-Pulse-Georgia  — bootstrap any new or existing project"
+echo "  Deprecated: /setup                   — alias, will be removed in v0.3"
+echo ""
+echo "Sync verification:"
+echo "  Run '$CLAUDE_DIR/scripts/verify-local-sync.sh' any time to check"
+echo "  that your local ~/.claude/ is in sync with the repo."
 echo ""
 echo "Done!"

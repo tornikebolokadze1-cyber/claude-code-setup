@@ -1,5 +1,9 @@
 # Claude Code Production Setup
 
+[![CI](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml/badge.svg)](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Version](https://img.shields.io/badge/version-0.2.x-blue.svg)](CHANGELOG.md)
+
 A complete, production-grade configuration system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's official AI coding assistant.
 
 **This is not a CLI tool.** It's a configuration layer that installs into your `~/.claude/` directory and gives Claude Code production-level rules, safety guardrails, automated hooks, and a `/setup-AI-Pulse-Georgia` slash command that bootstraps any new project in under a minute.
@@ -23,7 +27,7 @@ Install this once. Every project gets production infrastructure from day one.
 │   ├── setup-AI-Pulse-Georgia.md  ← The /setup-AI-Pulse-Georgia slash command
 │   ├── setup.md                  ← Deprecated alias (removed in v0.3)
 │   └── setup-phases/             ← Phase 0, 1, 2 sub-files
-├── rules/                ← 18 rule files Claude follows automatically
+├── rules/                ← 20 rules + index Claude follows automatically
 │   ├── 01-auto-checkpoint.md
 │   ├── 02-scope-control.md
 │   ├── ...
@@ -155,7 +159,7 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## What the Rules Do
 
-18 rule files that Claude loads and follows automatically in every session:
+20 rules + index that Claude loads and follows automatically in every session:
 
 ### Safety & Governance
 
@@ -192,6 +196,8 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 | **Go Standards** | Accept interfaces, return structs. Table-driven tests. `context.Context` for cancellation. `-race` flag always. |
 | **Security** | OWASP Top 10 prevention. Parameterized queries only. bcrypt/argon2 for passwords. HTTPS mandatory. Security headers on every response. Rate limiting on all endpoints. |
 
+| **Observability** | Structured JSON logging schema. RED+USE metrics. Distributed tracing via OpenTelemetry. P0/P1/P2/P3 alert tiers. |
+| **API Versioning** | SemVer scheme. URL path versioning for public APIs. 90-day deprecation notice. Sunset + Deprecation headers. 410 Gone on removal. |
 ### Session Management
 
 | Rule | What It Does |
@@ -235,7 +241,9 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## Bootstrap Templates
 
-9 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack:
+9 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack.
+Every template ships with **CLAUDE.md** (project-specific Claude instructions) and **.env.example** (environment variable reference).
+See [bootstrap-templates/README.md](bootstrap-templates/README.md) for a decision tree and feature matrix:
 
 ### Next.js Web App
 ```
@@ -328,6 +336,35 @@ wrangler.toml      <- Wrangler 4 config (compat date, KV/D1 stubs)
 Stack: TypeScript + Wrangler 4 + Vitest (workers pool) + HMAC webhook stub
 
 See [bootstrap-templates/README.md](./bootstrap-templates/README.md) for the full decision tree and feature matrix.
+
+
+---
+
+## Maintenance
+
+### Sync verification
+
+After editing any rule, template, or script in your local `~/.claude/` directory, run:
+
+```bash
+./scripts/verify-local-sync.sh
+```
+
+This performs a byte-level diff (CRLF-normalised) between your local `~/.claude/` and the
+repo, then reports three categories:
+
+| Category | Meaning |
+|---|---|
+| `MISSING_IN_REPO` | File exists locally but not in the repo — needs to be committed |
+| `MISSING_IN_LOCAL` | File exists in the repo but not locally — run `./install.sh` to fix |
+| `CONTENT_DIFFER` | File exists in both but content differs — decide which side is the source of truth |
+
+Exits **0** when clean, **1** when any drift is detected. Use `--fix=push` for a dry-run
+list of copy commands that would push local changes back to the repo:
+
+```bash
+./scripts/verify-local-sync.sh . ~/.claude --fix=push
+```
 
 
 ---
