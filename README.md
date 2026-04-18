@@ -2,7 +2,7 @@
 
 A complete, production-grade configuration system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's official AI coding assistant.
 
-**This is not a CLI tool.** It's a configuration layer that installs into your `~/.claude/` directory and gives Claude Code production-level rules, safety guardrails, automated hooks, and a `/setup` slash command that bootstraps any new project in under a minute.
+**This is not a CLI tool.** It's a configuration layer that installs into your `~/.claude/` directory and gives Claude Code production-level rules, safety guardrails, automated hooks, and a `/setup-AI-Pulse-Georgia` slash command that bootstraps any new project in under a minute.
 
 ## The Problem
 
@@ -20,7 +20,9 @@ Install this once. Every project gets production infrastructure from day one.
 ```
 ~/.claude/
 ├── commands/
-│   └── setup.md          ← The /setup slash command
+│   ├── setup-AI-Pulse-Georgia.md  ← The /setup-AI-Pulse-Georgia slash command
+│   ├── setup.md                  ← Deprecated alias (removed in v0.3)
+│   └── setup-phases/             ← Phase 0, 1, 2 sub-files
 ├── rules/                ← 18 rule files Claude follows automatically
 │   ├── 01-auto-checkpoint.md
 │   ├── 02-scope-control.md
@@ -52,21 +54,21 @@ cd claude-code-setup
 
 This copies rules, commands, templates, and scripts into `~/.claude/`. Your existing config is backed up automatically.
 
-### Step 2: Use `/setup` in any new project
+### Step 2: Use `/setup-AI-Pulse-Georgia` in any new project
 
 Open Claude Code in an empty directory and type:
 
 ```
-/setup my-project-name
+/setup-AI-Pulse-Georgia my-project-name
 ```
 
 ### Step 3: Claude builds everything
 
-The `/setup` command runs in **two phases**:
+The `/setup-AI-Pulse-Georgia` command runs in **two phases**:
 
 ---
 
-## What `/setup` Creates
+## What `/setup-AI-Pulse-Georgia` Creates
 
 ### Phase 1 — Universal Infrastructure (automatic, no questions asked)
 
@@ -231,7 +233,7 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## Bootstrap Templates
 
-7 pre-configured project starters that `/setup` uses based on your chosen stack:
+7 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack:
 
 ### Next.js Web App
 ```
@@ -323,8 +325,9 @@ Copies everything to `~/.claude/`. Existing config is backed up automatically.
 # Rules only
 cp rules/*.md ~/.claude/rules/
 
-# /setup command only
-cp commands/setup.md ~/.claude/commands/
+# /setup-AI-Pulse-Georgia command only
+cp commands/setup-AI-Pulse-Georgia.md ~/.claude/commands/
+cp -r commands/setup-phases/ ~/.claude/commands/
 
 # Specific template only
 cp -r bootstrap-templates/fastapi-backend ~/.claude/bootstrap-templates/
@@ -342,7 +345,7 @@ Hooks must be merged into your `~/.claude/settings.json`. See `hooks/settings-ho
 Create any `.md` file in `~/.claude/rules/`. Claude loads all markdown files from that directory automatically.
 
 ### Add your own templates
-Create a new directory in `~/.claude/bootstrap-templates/` with your project structure. The `/setup` command will use it when the matching stack is selected.
+Create a new directory in `~/.claude/bootstrap-templates/` with your project structure. The `/setup-AI-Pulse-Georgia` command will use it when the matching stack is selected.
 
 ### Modify hooks
 Edit the hooks in `~/.claude/settings.json`. Each hook is a shell command that runs on specific triggers.
@@ -359,7 +362,14 @@ Edit the hooks in `~/.claude/settings.json`. Each hook is a shell command that r
 
 ## License
 
-MIT — use it, modify it, share it.
+MIT — see [LICENSE](LICENSE) for details.
+
+
+---
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md) for the full history of changes.
 
 ---
 
