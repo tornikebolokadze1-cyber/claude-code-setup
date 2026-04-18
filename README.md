@@ -23,7 +23,7 @@ Install this once. Every project gets production infrastructure from day one.
 │   ├── setup-AI-Pulse-Georgia.md  ← The /setup-AI-Pulse-Georgia slash command
 │   ├── setup.md                  ← Deprecated alias (removed in v0.3)
 │   └── setup-phases/             ← Phase 0, 1, 2 sub-files
-├── rules/                ← 18 rule files Claude follows automatically
+├── rules/                ← 20 rules + index Claude follows automatically
 │   ├── 01-auto-checkpoint.md
 │   ├── 02-scope-control.md
 │   ├── ...
@@ -153,7 +153,7 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## What the Rules Do
 
-18 rule files that Claude loads and follows automatically in every session:
+20 rules + index that Claude loads and follows automatically in every session:
 
 ### Safety & Governance
 
@@ -190,6 +190,8 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 | **Go Standards** | Accept interfaces, return structs. Table-driven tests. `context.Context` for cancellation. `-race` flag always. |
 | **Security** | OWASP Top 10 prevention. Parameterized queries only. bcrypt/argon2 for passwords. HTTPS mandatory. Security headers on every response. Rate limiting on all endpoints. |
 
+| **Observability** | Structured JSON logging schema. RED+USE metrics. Distributed tracing via OpenTelemetry. P0/P1/P2/P3 alert tiers. |
+| **API Versioning** | SemVer scheme. URL path versioning for public APIs. 90-day deprecation notice. Sunset + Deprecation headers. 410 Gone on removal. |
 ### Session Management
 
 | Rule | What It Does |

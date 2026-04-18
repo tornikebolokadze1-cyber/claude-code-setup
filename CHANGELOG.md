@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased] -- v0.3.0
+
+### Added
+- `rules/README.md` -- rule index by category with layering explanation (why 01/07, 04/11, 10/11 redundancy is intentional)
+- `rules/18-observability.md` -- three pillars baseline (metrics/logs/traces), structured logging schema, RED+USE methods, alert tiers, April 2026 tooling (OTel, Prometheus, Sentry, Axiom)
+- `rules/19-api-versioning.md` -- SemVer scheme, URL vs header strategies, deprecation policy, Sunset headers, GraphQL field-level deprecation, webhook pinning, SDK alignment
+
+---
+
 ## [0.2.0] - 2026-04-18
 
 ### Added
