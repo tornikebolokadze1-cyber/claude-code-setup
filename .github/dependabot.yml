@@ -1,0 +1,54 @@
+version: 2
+updates:
+  # GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+
+  # npm -- nextjs-webapp
+  - package-ecosystem: "npm"
+    directory: "/bootstrap-templates/nextjs-webapp"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "template:nextjs-webapp"
+
+  # npm -- express-backend
+  - package-ecosystem: "npm"
+    directory: "/bootstrap-templates/express-backend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "template:express-backend"
+
+  # pip -- ai-agent
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/ai-agent"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "template:ai-agent"
+
+  # pip -- fastapi-backend
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/fastapi-backend"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "template:fastapi-backend"
+
+  # pip -- telegram-bot
+  - package-ecosystem: "pip"
+    directory: "/bootstrap-templates/telegram-bot"
+    schedule:
+      interval: "weekly"
+    labels:
+      - "dependencies"
+      - "template:telegram-bot"
