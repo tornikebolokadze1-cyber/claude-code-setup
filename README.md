@@ -27,7 +27,7 @@ Install this once. Every project gets production infrastructure from day one.
 │   ├── setup-AI-Pulse-Georgia.md  ← The /setup-AI-Pulse-Georgia slash command
 │   ├── setup.md                  ← Deprecated alias (removed in v0.3)
 │   └── setup-phases/             ← Phase 0, 1, 2 sub-files
-├── rules/                ← 20 rules + index Claude follows automatically
+├── rules/                ← 22 rules + index Claude follows automatically
 │   ├── 01-auto-checkpoint.md
 │   ├── 02-scope-control.md
 │   ├── ...
@@ -163,7 +163,7 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## What the Rules Do
 
-20 rules + index that Claude loads and follows automatically in every session:
+22 rules + index that Claude loads and follows automatically in every session:
 
 ### Safety & Governance
 

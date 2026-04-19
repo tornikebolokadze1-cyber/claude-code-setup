@@ -25,6 +25,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bootstrap-templates/vite-spa/` — React 19 + Vite 6 + TS 5.7 SPA with Vitest 3 + Testing Library + ESLint 9 flat config, production-ready
 - `bootstrap-templates/cloudflare-worker/` — TS Worker + Wrangler 4 (compat date 2026-04-01), typed routing, CORS + logging middleware, HMAC webhook stub, Vitest + workers pool
 - `bootstrap-templates/README.md` — decision tree, feature matrix, stability labels, Phase-2 roadmap
+- `rules/20-rust-standards.md`: Rust 1.85, tokio 1.40, clippy/cargo-audit/cargo-deny, typestate, thiserror+anyhow, AFIT
+- `rules/21-swift-standards.md`: Swift 6.1 strict concurrency, SwiftUI @Observable, Swift Testing framework, MVVM, SPM
 - `hooks/reference/` (20 hook JSON definitions): a gallery of ready-to-wire hooks — backup-before-edit, change-tracker, console-log-cleaner, conventional-commits, dangerous-command-blocker, desktop-notification-on-stop, file-protection, format-python-files, lint-on-save, plan-gate, scope-guard, secret-scanner, security-scanner, simple-notifications, smart-commit, smart-formatting, tdd-gate, telegram-detailed-notifications, telegram-notifications, test-runner (see `hooks/README.md` for full index)
 - `hooks/README.md`: comprehensive hook documentation with per-hook table (event, matcher, purpose, platform, requirements) and activation instructions
 - `hooks/settings-hooks.windows.json`: Windows-path variants of the baseline hooks using PowerShell (`pwsh -NoLogo -NoProfile -Command`)
