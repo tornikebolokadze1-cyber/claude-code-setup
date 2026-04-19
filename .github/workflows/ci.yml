@@ -6,6 +6,11 @@ on:
   pull_request:
     branches: ["main"]
 
+# Least-privilege token scope (security.md §1.2). Actions that need more
+# should declare their own permissions block.
+permissions:
+  contents: read
+
 jobs:
   lint-and-check:
     name: Lint & Check
@@ -38,13 +43,44 @@ jobs:
           shellcheck install.sh
           shellcheck scripts/*.sh
 
-      # --- Markdown lint ---
+      # --- Markdown lint (non-blocking: warnings surfaced, build passes) ---
       - name: Install markdownlint-cli2
         run: npm install -g markdownlint-cli2
 
       - name: Markdownlint rules/ commands/ archive/
         run: |
           markdownlint-cli2 "rules/**/*.md" "commands/**/*.md" "archive/**/*.md" || true
+
+      # --- Install.sh smoke test (runs installer against scratch HOME) ---
+      - name: Smoke-test install.sh against scratch HOME
+        run: |
+          SCRATCH=$(mktemp -d)
+          export HOME="$SCRATCH"
+          echo "Running ./install.sh with HOME=$HOME"
+          ./install.sh
+          echo ""
+          echo "=== Post-install directory check ==="
+          ls -la "$HOME/.claude/" || { echo "FAIL: ~/.claude/ not created"; exit 1; }
+          test -d "$HOME/.claude/rules" || { echo "FAIL: rules/ not installed"; exit 1; }
+          test -d "$HOME/.claude/commands" || { echo "FAIL: commands/ not installed"; exit 1; }
+          test -d "$HOME/.claude/scripts" || { echo "FAIL: scripts/ not installed"; exit 1; }
+          test -d "$HOME/.claude/hooks" || { echo "FAIL: hooks/ not installed"; exit 1; }
+          test -d "$HOME/.claude/templates" || { echo "FAIL: templates/ not installed"; exit 1; }
+          test -d "$HOME/.claude/archive/bootstrap-templates" || { echo "FAIL: archive/bootstrap-templates/ not installed"; exit 1; }
+          test -f "$HOME/.claude/commands/setup-AI-Pulse-Georgia.md" || { echo "FAIL: setup command missing"; exit 1; }
+          test -f "$HOME/.claude/hooks/settings-hooks.json" || { echo "FAIL: baseline hooks config missing"; exit 1; }
+          test -f "$HOME/.claude/templates/CLAUDE.md.example" || { echo "FAIL: CLAUDE.md.example missing"; exit 1; }
+          RULE_COUNT=$(find "$HOME/.claude/rules" -maxdepth 1 -name '*.md' -type f | wc -l)
+          test "$RULE_COUNT" -ge 15 || { echo "FAIL: only $RULE_COUNT rules (need ≥15)"; exit 1; }
+          echo "All post-install checks passed (rules=$RULE_COUNT)."
+
+      - name: Run validate-install.sh against scratch install
+        run: |
+          chmod +x "$HOME/.claude/scripts/validate-install.sh" 2>/dev/null || \
+            chmod +x scripts/validate-install.sh
+          ./scripts/validate-install.sh || echo "validate-install reported warnings (non-fatal)"
+        env:
+          CLAUDE_HOME: ${{ env.HOME }}
 
       # --- Secret scan ---
       - name: Secret scan (gitleaks)

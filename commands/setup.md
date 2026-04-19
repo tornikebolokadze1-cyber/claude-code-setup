@@ -1,15 +1,18 @@
 ---
 allowed-tools: Read
-description: DEPRECATED — renamed to /setup-AI-Pulse-Georgia. This alias will be removed in v0.3.
-argument-hint: [optional: project-name]
+description: Deprecated alias of /setup-AI-Pulse-Georgia (kept indefinitely for muscle-memory).
 ---
 
-# /setup — Deprecation Notice
+# /setup — Deprecated Alias
 
-This command has been renamed to **`/setup-AI-Pulse-Georgia`** to personalize it and avoid collision with future Anthropic or community `/setup` commands.
+This command is a thin alias of **`/setup-AI-Pulse-Georgia`** and is kept
+indefinitely for users whose muscle-memory still types `/setup`.
+
+Originally renamed in v0.2.0 to avoid collision with future Anthropic or
+community `/setup` commands. The alias was briefly slated for removal in
+v0.3.0 but was kept through v0.3 and v0.4 because no compatible replacement
+shortcut exists.
 
 ## Action required
 
-Please use `/setup-AI-Pulse-Georgia` instead. This alias will be removed in v0.3.
-
-To proceed with the new command, read and follow `commands/setup-AI-Pulse-Georgia.md`.
+Proceed as normal. Read and follow `commands/setup-AI-Pulse-Georgia.md`.

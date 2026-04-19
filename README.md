@@ -220,7 +220,14 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ## What the Hooks Do
 
-7 automated hooks that run on every Claude Code action (configured in `settings.json`):
+Hooks are shipped in two tiers: a **13-hook baseline** (`hooks/settings-hooks.json`)
+covering the most common safety checks, and a **20-hook reference gallery**
+(`hooks/reference/`) with opt-in specialised hooks. Below are the 11 hooks
+that most users wire up first; see `hooks/README.md` for the full list of
+13 baseline hooks + 20 reference hooks and the exact `jq` merge command.
+
+Hooks must be merged into your `~/.claude/settings.json` manually — see
+[Hooks (manual merge required)](#hooks-manual-merge-required) below.
 
 ### Pre-Action Hooks (run BEFORE Claude executes)
 
@@ -424,9 +431,13 @@ Hooks must be merged into your `~/.claude/settings.json`. See [`hooks/README.md`
 
 **Baseline (13 hooks, production-ready):**
 ```bash
-# Merge with jq
-jq -s '.[0] * { "hooks": ( ... ) }' ~/.claude/settings.json hooks/settings-hooks.json > /tmp/merged.json   && mv /tmp/merged.json ~/.claude/settings.json
-# Windows: use hooks/settings-hooks.windows.json instead
+# Merge baseline hooks into your existing settings.json (Unix / Git Bash):
+jq -s '.[0] * .[1]' ~/.claude/settings.json hooks/settings-hooks.json > /tmp/merged.json \
+  && mv /tmp/merged.json ~/.claude/settings.json
+
+# Windows PowerShell variant (uses PowerShell-wrapped hook commands):
+jq -s '.[0] * .[1]' ~/.claude/settings.json hooks/settings-hooks.windows.json > /tmp/merged.json \
+  && mv /tmp/merged.json ~/.claude/settings.json
 ```
 
 **Hooks gallery (`hooks/reference/` — 20 definitions, opt-in):**
@@ -445,6 +456,22 @@ Pick any hook from `hooks/reference/`, copy its `hooks` block into `~/.claude/se
 ---
 
 ## Utility Scripts
+
+The `scripts/` directory ships 7 shell + 1 Node.js utility. Full index and
+per-script docs: [`scripts/README.md`](scripts/README.md).
+
+| Script | Purpose |
+|---|---|
+| `install-lib.sh` | Shared helpers (manifest writing, file collection) sourced by other scripts |
+| `cleanup-backups.sh` | Prune `.bak` files older than N days from `~/.claude/file-backups/` |
+| `cleanup-plugin-cache.sh` | Remove stale `temp_git_*` dirs from `~/.claude/plugins/cache/` |
+| `migrate-credentials.sh` | Move plain-text credentials to `~/.config/claude-secrets/` (dry-run by default) |
+| `patch-settings-2026.mjs` | Migrate `settings.json` schema to 2026 (adds lazy-load, new hook events) |
+| `session-metrics.sh` | Show recent session metrics from `~/.claude/metrics/` |
+| `validate-install.sh` | Post-install sanity checker (7 checks, `--json` / `--verbose` flags) |
+| `verify-local-sync.sh` | Byte-level diff between repo and `~/.claude/`, reports drift |
+
+All scripts are installed to `~/.claude/scripts/` by `install.sh` and marked executable.
 
 ---
 

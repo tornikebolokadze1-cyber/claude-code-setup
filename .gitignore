@@ -23,3 +23,18 @@ __pycache__/
 .env
 .env.local
 .env.*.local
+
+# Credentials (per rules/security.md §4.2 — MANDATORY for every repo)
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+credentials.json
+serviceAccountKey.json
+secrets/
+.envrc
+.envrc.template.*
+
+# Local overrides
+.claude/settings.local.json

@@ -92,6 +92,36 @@ echo "  verify-local-sync.sh    -> $CLAUDE_DIR/scripts/verify-local-sync.sh"
 echo "  validate-install.sh     -> $CLAUDE_DIR/scripts/validate-install.sh"
 echo "  patch-settings-2026.mjs -> $CLAUDE_DIR/scripts/patch-settings-2026.mjs"
 
+# Copy hooks (settings-hooks.json, .windows.json, reference/ gallery)
+if [ -d "$SCRIPT_DIR/hooks" ]; then
+  echo "Installing hooks..."
+  mkdir -p "$CLAUDE_DIR/hooks/reference"
+  if [ -f "$SCRIPT_DIR/hooks/settings-hooks.json" ]; then
+    cp "$SCRIPT_DIR/hooks/settings-hooks.json" "$CLAUDE_DIR/hooks/"
+  fi
+  if [ -f "$SCRIPT_DIR/hooks/settings-hooks.windows.json" ]; then
+    cp "$SCRIPT_DIR/hooks/settings-hooks.windows.json" "$CLAUDE_DIR/hooks/"
+  fi
+  if [ -f "$SCRIPT_DIR/hooks/README.md" ]; then
+    cp "$SCRIPT_DIR/hooks/README.md" "$CLAUDE_DIR/hooks/"
+  fi
+  if [ -d "$SCRIPT_DIR/hooks/reference" ]; then
+    cp "$SCRIPT_DIR/hooks/reference/"*.json "$CLAUDE_DIR/hooks/reference/" 2>/dev/null || true
+  fi
+  HOOKS_COUNT=$(count_glob "$SCRIPT_DIR/hooks/reference/*.json")
+  echo "  Hooks installed (baseline + $HOOKS_COUNT reference hooks)."
+  echo "  NOTE: hooks are NOT auto-wired into settings.json. See hooks/README.md for activation."
+fi
+
+# Copy templates (CLAUDE.md.example + settings.local.json.example)
+if [ -d "$SCRIPT_DIR/templates" ]; then
+  echo "Installing templates..."
+  mkdir -p "$CLAUDE_DIR/templates"
+  cp "$SCRIPT_DIR/templates/"* "$CLAUDE_DIR/templates/" 2>/dev/null || true
+  TEMPLATES_DOCS_COUNT=$(count_glob "$SCRIPT_DIR/templates/*")
+  echo "  Templates installed ($TEMPLATES_DOCS_COUNT reference files)."
+fi
+
 # Copy archived bootstrap templates (deprecated — kept for backward compat &
 # for stacks without mature community scaffolders, e.g. n8n-workflow)
 if [ -d "$SCRIPT_DIR/archive/bootstrap-templates" ]; then
@@ -113,14 +143,15 @@ elif [ -d "$SCRIPT_DIR/bootstrap-templates" ]; then
   echo "  $TEMPLATE_COUNT templates installed (legacy layout)."
 fi
 
-# Hooks notice
+# Hooks notice — post-install reminder
 echo ""
 echo "=== Hooks Configuration ==="
-echo "Hooks need to be added to your settings.json manually."
-echo "The hooks config is at: hooks/settings-hooks.json"
+echo "Baseline hooks are at: $CLAUDE_DIR/hooks/settings-hooks.json"
+echo "Reference gallery:     $CLAUDE_DIR/hooks/reference/ (20 opt-in hooks)"
 echo ""
-echo "To add hooks, merge the content into:"
-echo "  $CLAUDE_DIR/settings.json"
+echo "Hooks are NOT auto-wired. To activate baseline hooks, merge the JSON"
+echo "into $CLAUDE_DIR/settings.json manually. See $CLAUDE_DIR/hooks/README.md"
+echo "for the exact jq one-liner."
 echo ""
 
 # Summary
