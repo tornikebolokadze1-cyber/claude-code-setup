@@ -62,8 +62,8 @@ fi
 # Check 2: rule files present (count compared against repo, not a hardcoded number)
 # ---------------------------------------------------------------------------
 # The repo's `rules/` directory is the source of truth. We count installed
-# rule files and warn if the count is implausibly low. Using find avoids
-# shellcheck SC2012 (no `ls` piping) and handles paths with spaces.
+# rule files and warn if the count is implausibly low. Using `find` avoids
+# the SC2012 lint (no `ls` piping) and handles paths with spaces.
 RULE_COUNT=0
 if [[ -d "$CLAUDE_DIR/rules" ]]; then
   RULE_COUNT="$(find "$CLAUDE_DIR/rules" -maxdepth 1 -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
