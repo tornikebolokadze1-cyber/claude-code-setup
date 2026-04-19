@@ -154,9 +154,9 @@ for m in "${MATCHES[@]}"; do
 done
 
 echo ""
-echo "Env template: ./.envrc.template."$STAMP""
+echo "Env template: ./.envrc.template.${STAMP}"
 echo ""
 echo "Next steps:"
-echo "  1. Open .envrc.template."$STAMP" and fill in real values (get them from $VAULT_DIR or your password manager)"
+echo "  1. Open .envrc.template.${STAMP} and fill in real values (get them from $VAULT_DIR or your password manager)"
 echo "  2. Rename to .envrc and run 'direnv allow .'"
 echo "  3. Verify tools still work, then delete $VAULT_DIR after a week"

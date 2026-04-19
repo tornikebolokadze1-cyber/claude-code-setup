@@ -25,7 +25,7 @@ echo ""
 DELETED=0
 while IFS= read -r file; do
   rm "$file" 2>/dev/null && DELETED=$((DELETED + 1))
-done < <(find "$BACKUP_DIR" -name "*.bak" -type f -mtime +$DAYS 2>/dev/null)
+done < <(find "$BACKUP_DIR" -name "*.bak" -type f -mtime "+$DAYS" 2>/dev/null)
 
 # Remove empty date directories
 find "$BACKUP_DIR" -type d -empty -delete 2>/dev/null
