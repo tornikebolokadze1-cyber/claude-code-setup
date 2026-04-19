@@ -14,6 +14,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # gitleaks needs full history to diff parent..tip on PRs; shallow
+          # clone causes "unknown revision" on the first commit of a branch.
+          fetch-depth: 0
 
       - name: Set up Node.js 20
         uses: actions/setup-node@v4
@@ -38,9 +42,9 @@ jobs:
       - name: Install markdownlint-cli2
         run: npm install -g markdownlint-cli2
 
-      - name: Markdownlint rules/ commands/ bootstrap-templates/
+      - name: Markdownlint rules/ commands/ archive/
         run: |
-          markdownlint-cli2 "rules/**/*.md" "commands/**/*.md" "bootstrap-templates/**/*.md" || true
+          markdownlint-cli2 "rules/**/*.md" "commands/**/*.md" "archive/**/*.md" || true
 
       # --- Secret scan ---
       - name: Secret scan (gitleaks)
