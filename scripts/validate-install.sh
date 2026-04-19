@@ -63,6 +63,8 @@ fi
 # ---------------------------------------------------------------------------
 RULE_COUNT=0
 if [[ -d "$CLAUDE_DIR/rules" ]]; then
+  # Rule filenames are NN-kebab-case.md (shellcheck SC2012 safe here)
+  # shellcheck disable=SC2012
   RULE_COUNT="$(ls "$CLAUDE_DIR/rules/"*.md 2>/dev/null | wc -l | tr -d ' ')"
 fi
 if (( RULE_COUNT == 18 )); then

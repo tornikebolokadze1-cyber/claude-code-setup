@@ -8,10 +8,14 @@ No technology questions. No "what should the app do?" yet. Just the foundation.
 Before starting Phase 1, verify these external dependencies exist:
 
 ```bash
-# Check template sources (used in Phase 2)
+# Check template sources (used in Phase 2 as fallbacks when community scaffolder is unavailable)
 TEMPLATES_OK=true
-for dir in ~/.claude/bootstrap-templates ~/.claude/rules; do
+for dir in ~/.claude/archive/bootstrap-templates ~/.claude/rules; do
   if [ ! -d "$dir" ]; then
+    # Pre-v0.4 layout fallback
+    if [ "$dir" = "$HOME/.claude/archive/bootstrap-templates" ] && [ -d "$HOME/.claude/bootstrap-templates" ]; then
+      continue  # legacy path still works
+    fi
     TEMPLATES_OK=false
   fi
 done

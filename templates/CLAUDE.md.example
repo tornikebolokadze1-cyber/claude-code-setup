@@ -1,0 +1,73 @@
+# CLAUDE.md — Project Memory (Template)
+
+> This is a reference template showing the Anthropic-recommended CLAUDE.md
+> convention (April 2026). Target: under 80 lines, scannable in one screen.
+> `/setup-AI-Pulse-Georgia` writes a stack-specific version of this at
+> project root on first run. The global/user layer at `~/.claude/CLAUDE.md`
+> adds your personal rules on top; this file captures project-specific facts.
+
+## Project
+
+- **Name:** {{project-name}}
+- **Purpose:** {{one-sentence description of what this project does}}
+- **Stack:** {{language}} + {{framework}} + {{database}}
+- **Deploy target:** {{vercel | railway | cloudflare | self-hosted}}
+
+## Run locally
+
+```bash
+{{install-command}}        # install dependencies
+{{dev-command}}            # start the dev server
+{{test-command}}           # run the test suite
+{{build-command}}          # build for production
+```
+
+## Project conventions
+
+- **Language version:** {{e.g. Node 20 LTS / Python 3.13 / Go 1.24}}
+- **Package manager:** {{npm | pnpm | yarn | bun | uv | poetry}}
+- **Formatter / linter:** {{e.g. prettier + eslint / black + ruff / gofmt + golangci-lint}}
+- **Test framework:** {{e.g. vitest / pytest / go test}}
+- **Commit style:** Conventional Commits (see `CONTRIBUTING.md` if present)
+
+## Architecture
+
+{{2-4 bullets describing the high-level layout. Example:}}
+
+- `src/app/` — Next.js App Router pages and layouts
+- `src/components/` — reusable React components
+- `src/lib/` — pure helpers and domain logic
+- `src/server/` — server-only code (tRPC, DB access)
+
+## Stack-specific rules
+
+{{List any non-obvious constraints a contributor must know. Example:}}
+
+- Server Components are the default; only add `'use client'` when truly needed.
+- Database access goes through `src/server/db.ts` — never import the ORM directly in components.
+- Never commit `.env.local`; use `.env.example` as the source of truth for expected keys.
+
+## External services
+
+{{List auth/payment/email/AI services the project depends on. Example:}}
+
+- Supabase — auth + PostgreSQL
+- Stripe — payments (test keys in dev, live keys via Vercel env)
+- OpenAI — LLM calls behind `src/server/ai.ts` adapter
+
+## Globals applied on top
+
+This project inherits the user-level rules at `~/.claude/CLAUDE.md` and the
+global rule set at `~/.claude/rules/`. The project-specific rules live at
+`.claude/rules/` (see that directory for details).
+
+## What to do if things break
+
+- **Undo last change** — Claude will restore from the most recent checkpoint commit.
+- **Go back to the last working state** — Claude will find the last `CHECKPOINT: ... Status: WORKING` commit and restore files from it.
+- **Something broke** — Claude will diagnose and fix silently per `rules/03-error-recovery.md`.
+
+## Notes for future contributors (and future Claude)
+
+{{Add project-specific gotchas, deploy quirks, known bugs, migration plans.}}
+{{Keep this file under 80 lines. If it grows, extract topics to `.claude/rules/`.}}

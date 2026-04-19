@@ -46,6 +46,8 @@ COMPARE_PATHS=(
   "rules"
   "hooks"
   "scripts"
+  "archive"
+  "templates"
   "bootstrap-templates"
   "install.sh"
   "README.md"

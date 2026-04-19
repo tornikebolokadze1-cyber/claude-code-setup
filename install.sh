@@ -1,27 +1,30 @@
 #!/bin/bash
-# Claude Code Setup Installer
-# Copies rules, commands, hooks, templates, and scripts to ~/.claude/
+# Claude Code Setup Installer — v0.4.0
+# Copies rules, commands, hooks, archived templates, and scripts to ~/.claude/
+# New in v0.4: templates moved to archive/; /setup-AI-Pulse-Georgia now delegates
+# to community scaffolders (create-next-app, cookiecutter, etc.) and layers
+# Claude Code conventions on top instead of copying monolithic archetypes.
 
-set -e
+set -euo pipefail
 
 CLAUDE_DIR="$HOME/.claude"
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 
-echo "=== Claude Code Setup Installer ==="
+echo "=== Claude Code Setup Installer (v0.4.0) ==="
 echo ""
 
-# Check if ~/.claude exists
+# Ensure ~/.claude exists
 if [ ! -d "$CLAUDE_DIR" ]; then
   echo "Creating $CLAUDE_DIR..."
   mkdir -p "$CLAUDE_DIR"
 fi
 
-# Backup existing files
+# Backup existing files (rules/commands/scripts) if non-empty
 BACKUP_DIR="$CLAUDE_DIR/backup-$(date '+%Y%m%d-%H%M%S')"
 NEEDS_BACKUP=false
 
 for dir in rules commands scripts; do
-  if [ -d "$CLAUDE_DIR/$dir" ] && [ "$(ls -A "$CLAUDE_DIR/$dir" 2>/dev/null)" ]; then
+  if [ -d "$CLAUDE_DIR/$dir" ] && [ -n "$(ls -A "$CLAUDE_DIR/$dir" 2>/dev/null || true)" ]; then
     NEEDS_BACKUP=true
     break
   fi
@@ -30,48 +33,80 @@ done
 if [ "$NEEDS_BACKUP" = true ]; then
   echo "Backing up existing config to $BACKUP_DIR..."
   mkdir -p "$BACKUP_DIR"
-  [ -d "$CLAUDE_DIR/rules" ]    && cp -r "$CLAUDE_DIR/rules"    "$BACKUP_DIR/" 2>/dev/null || true
-  [ -d "$CLAUDE_DIR/commands" ] && cp -r "$CLAUDE_DIR/commands" "$BACKUP_DIR/" 2>/dev/null || true
-  [ -d "$CLAUDE_DIR/scripts" ]  && cp -r "$CLAUDE_DIR/scripts"  "$BACKUP_DIR/" 2>/dev/null || true
+  for dir in rules commands scripts; do
+    if [ -d "$CLAUDE_DIR/$dir" ]; then
+      cp -r "$CLAUDE_DIR/$dir" "$BACKUP_DIR/" 2>/dev/null || true
+    fi
+  done
   echo "  Backup saved."
 fi
+
+# Helper: count files matching a glob without relying on `ls | wc -l` (SC2012-safe)
+count_glob() {
+  local pattern="$1"
+  # shellcheck disable=SC2206
+  local matches=( $pattern )
+  if [ "${#matches[@]}" -eq 1 ] && [ ! -e "${matches[0]}" ]; then
+    echo 0
+  else
+    echo "${#matches[@]}"
+  fi
+}
 
 # Copy rules
 echo "Installing rules..."
 mkdir -p "$CLAUDE_DIR/rules"
 cp "$SCRIPT_DIR"/rules/*.md "$CLAUDE_DIR/rules/"
-echo "  $(ls "$SCRIPT_DIR"/rules/*.md | wc -l | tr -d ' ') rule files installed."
+RULE_COUNT=$(count_glob "$SCRIPT_DIR/rules/*.md")
+echo "  $RULE_COUNT rule files installed."
 
 # Copy commands
 echo "Installing /setup-AI-Pulse-Georgia command and phase files..."
 mkdir -p "$CLAUDE_DIR/commands/setup-phases"
 cp "$SCRIPT_DIR"/commands/setup-AI-Pulse-Georgia.md "$CLAUDE_DIR/commands/"
 cp "$SCRIPT_DIR"/commands/setup-phases/*.md "$CLAUDE_DIR/commands/setup-phases/"
-cp "$SCRIPT_DIR"/commands/setup.md "$CLAUDE_DIR/commands/"
+if [ -f "$SCRIPT_DIR/commands/setup.md" ]; then
+  cp "$SCRIPT_DIR/commands/setup.md" "$CLAUDE_DIR/commands/"
+fi
 echo "  /setup-AI-Pulse-Georgia command installed (+ phase files + deprecation alias)."
 
 # Copy scripts (shell + Node.js utilities)
 echo "Installing scripts..."
 mkdir -p "$CLAUDE_DIR/scripts"
 cp "$SCRIPT_DIR"/scripts/*.sh "$CLAUDE_DIR/scripts/"
-# Also copy Node.js scripts (.mjs)
 for mjs in "$SCRIPT_DIR"/scripts/*.mjs; do
-  [ -f "$mjs" ] && cp "$mjs" "$CLAUDE_DIR/scripts/"
+  if [ -f "$mjs" ]; then
+    cp "$mjs" "$CLAUDE_DIR/scripts/"
+  fi
 done
 chmod +x "$CLAUDE_DIR/scripts/"*.sh
-SH_COUNT=$(ls "$SCRIPT_DIR"/scripts/*.sh 2>/dev/null | wc -l | tr -d ' ')
-MJS_COUNT=$(ls "$SCRIPT_DIR"/scripts/*.mjs 2>/dev/null | wc -l | tr -d ' ')
+SH_COUNT=$(count_glob "$SCRIPT_DIR/scripts/*.sh")
+MJS_COUNT=$(count_glob "$SCRIPT_DIR/scripts/*.mjs")
 echo "  Scripts installed ($SH_COUNT shell + $MJS_COUNT Node.js files)."
 echo "  verify-local-sync.sh    -> $CLAUDE_DIR/scripts/verify-local-sync.sh"
 echo "  validate-install.sh     -> $CLAUDE_DIR/scripts/validate-install.sh"
 echo "  patch-settings-2026.mjs -> $CLAUDE_DIR/scripts/patch-settings-2026.mjs"
 
-# Copy bootstrap templates (including CLAUDE.md and .env.example per template)
-echo "Installing bootstrap templates..."
-mkdir -p "$CLAUDE_DIR/bootstrap-templates"
-cp -r "$SCRIPT_DIR"/bootstrap-templates/* "$CLAUDE_DIR/bootstrap-templates/"
-echo "  $(ls -d "$SCRIPT_DIR"/bootstrap-templates/*/ | wc -l | tr -d ' ') templates installed."
-echo "  Each template includes: CLAUDE.md, .env.example, STRUCTURE.md"
+# Copy archived bootstrap templates (deprecated — kept for backward compat &
+# for stacks without mature community scaffolders, e.g. n8n-workflow)
+if [ -d "$SCRIPT_DIR/archive/bootstrap-templates" ]; then
+  echo "Installing archived bootstrap templates..."
+  mkdir -p "$CLAUDE_DIR/archive/bootstrap-templates"
+  cp -r "$SCRIPT_DIR"/archive/bootstrap-templates/* "$CLAUDE_DIR/archive/bootstrap-templates/"
+  TEMPLATE_COUNT=$(count_glob "$SCRIPT_DIR/archive/bootstrap-templates/*/")
+  echo "  $TEMPLATE_COUNT archived templates installed under archive/."
+  echo "  NOTE: templates are DEPRECATED as of v0.4. /setup-AI-Pulse-Georgia now"
+  echo "  delegates to community scaffolders (create-next-app, cookiecutter, etc.)"
+  echo "  and layers Claude Code conventions on top. Archived templates remain"
+  echo "  available as a fallback for stacks without mature community scaffolders."
+elif [ -d "$SCRIPT_DIR/bootstrap-templates" ]; then
+  # Pre-v0.4 layout — copy from legacy location with deprecation warning
+  echo "Installing bootstrap templates (legacy v0.3 layout detected)..."
+  mkdir -p "$CLAUDE_DIR/bootstrap-templates"
+  cp -r "$SCRIPT_DIR"/bootstrap-templates/* "$CLAUDE_DIR/bootstrap-templates/"
+  TEMPLATE_COUNT=$(count_glob "$SCRIPT_DIR/bootstrap-templates/*/")
+  echo "  $TEMPLATE_COUNT templates installed (legacy layout)."
+fi
 
 # Hooks notice
 echo ""
@@ -84,17 +119,24 @@ echo "  $CLAUDE_DIR/settings.json"
 echo ""
 
 # Summary
+INSTALLED_RULES=$(count_glob "$CLAUDE_DIR/rules/*.md")
+INSTALLED_SCRIPTS=$(count_glob "$CLAUDE_DIR/scripts/*.sh")
+INSTALLED_TEMPLATES=0
+if [ -d "$CLAUDE_DIR/archive/bootstrap-templates" ]; then
+  INSTALLED_TEMPLATES=$(count_glob "$CLAUDE_DIR/archive/bootstrap-templates/*/")
+fi
+
 echo "=== Installation Complete ==="
 echo ""
 echo "Installed:"
-echo "  Rules:     $CLAUDE_DIR/rules/ ($(ls "$CLAUDE_DIR/rules/"*.md 2>/dev/null | wc -l | tr -d ' ') files)"
+echo "  Rules:     $CLAUDE_DIR/rules/ ($INSTALLED_RULES files)"
 echo "  Command:   $CLAUDE_DIR/commands/setup-AI-Pulse-Georgia.md (+ setup-phases/)"
-echo "  Scripts:   $CLAUDE_DIR/scripts/ ($(ls "$CLAUDE_DIR/scripts/"*.sh 2>/dev/null | wc -l | tr -d ' ') files)"
-echo "  Templates: $CLAUDE_DIR/bootstrap-templates/ ($(ls -d "$CLAUDE_DIR/bootstrap-templates/"*/ 2>/dev/null | wc -l | tr -d ' ') templates)"
+echo "  Scripts:   $CLAUDE_DIR/scripts/ ($INSTALLED_SCRIPTS files)"
+echo "  Archive:   $CLAUDE_DIR/archive/bootstrap-templates/ ($INSTALLED_TEMPLATES archived templates)"
 echo ""
 echo "Usage:"
 echo "  Primary:    /setup-AI-Pulse-Georgia  — bootstrap any new or existing project"
-echo "  Deprecated: /setup                   — alias, will be removed in v0.3"
+echo "  Deprecated: /setup                   — alias, kept for muscle-memory"
 echo ""
 echo "Sync verification:"
 echo "  Run '$CLAUDE_DIR/scripts/verify-local-sync.sh' any time to check"

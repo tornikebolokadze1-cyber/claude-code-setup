@@ -11,7 +11,8 @@
 
 - [ ] `rules/` -- behavior rule files
 - [ ] `commands/` -- slash commands
-- [ ] `bootstrap-templates/` -- project templates
+- [ ] `archive/bootstrap-templates/` -- archived starter archetypes (frozen in v0.4)
+- [ ] `commands/setup-phases/phase-2.md` delegation matrix -- scaffolder routing
 - [ ] `scripts/` -- utility scripts
 - [ ] `.github/` -- CI/CD scaffolding
 - [ ] `install.sh` -- installer

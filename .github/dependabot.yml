@@ -1,54 +1,28 @@
+# Dependabot v2 config — v0.4.0
+#
+# As of v0.4, `bootstrap-templates/` was moved to `archive/bootstrap-templates/`
+# because templates are ARCHETYPES (copy-once reference scaffolds), not live
+# code. Updating their pinned deps helps nobody: consumers who copied last month
+# already have the old versions; consumers who copy tomorrow get whatever is
+# latest from the upstream community scaffolder (`create-next-app`, etc.) that
+# /setup-AI-Pulse-Georgia now delegates to.
+#
+# Therefore Dependabot only watches:
+#   1. GitHub Actions at the repo root
+#   2. No language ecosystems — the repo itself has no runtime JS/Python deps
+#
+# Archived templates under archive/** are explicitly EXCLUDED per the
+# exclude-paths feature GitHub shipped in August 2025.
+
 version: 2
 updates:
-  # GitHub Actions
+  # GitHub Actions used by this repo's own CI workflows
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
       interval: "weekly"
     labels:
       - "dependencies"
-
-  # npm -- nextjs-webapp
-  - package-ecosystem: "npm"
-    directory: "/bootstrap-templates/nextjs-webapp"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "template:nextjs-webapp"
-
-  # npm -- express-backend
-  - package-ecosystem: "npm"
-    directory: "/bootstrap-templates/express-backend"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "template:express-backend"
-
-  # pip -- ai-agent
-  - package-ecosystem: "pip"
-    directory: "/bootstrap-templates/ai-agent"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "template:ai-agent"
-
-  # pip -- fastapi-backend
-  - package-ecosystem: "pip"
-    directory: "/bootstrap-templates/fastapi-backend"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "template:fastapi-backend"
-
-  # pip -- telegram-bot
-  - package-ecosystem: "pip"
-    directory: "/bootstrap-templates/telegram-bot"
-    schedule:
-      interval: "weekly"
-    labels:
-      - "dependencies"
-      - "template:telegram-bot"
+    # Archived directories are out of scope for automated PRs
+    exclude-paths:
+      - "archive/**"

@@ -27,6 +27,8 @@ echo ""
 
 # Show recent sessions
 echo "Recent sessions:"
+# Filenames are sessions-YYYYMMDD.jsonl (no spaces, no special chars) so ls -t is safe.
+# shellcheck disable=SC2012
 LATEST=$(ls -t "$METRICS_DIR"/sessions-*.jsonl 2>/dev/null | head -1)
 if [ -n "$LATEST" ]; then
   tail -5 "$LATEST" | while read -r line; do
