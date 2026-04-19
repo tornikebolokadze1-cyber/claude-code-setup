@@ -25,6 +25,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `bootstrap-templates/vite-spa/` — React 19 + Vite 6 + TS 5.7 SPA with Vitest 3 + Testing Library + ESLint 9 flat config, production-ready
 - `bootstrap-templates/cloudflare-worker/` — TS Worker + Wrangler 4 (compat date 2026-04-01), typed routing, CORS + logging middleware, HMAC webhook stub, Vitest + workers pool
 - `bootstrap-templates/README.md` — decision tree, feature matrix, stability labels, Phase-2 roadmap
+- `hooks/reference/` (20 hook JSON definitions): a gallery of ready-to-wire hooks — backup-before-edit, change-tracker, console-log-cleaner, conventional-commits, dangerous-command-blocker, desktop-notification-on-stop, file-protection, format-python-files, lint-on-save, plan-gate, scope-guard, secret-scanner, security-scanner, simple-notifications, smart-commit, smart-formatting, tdd-gate, telegram-detailed-notifications, telegram-notifications, test-runner (see `hooks/README.md` for full index)
+- `hooks/README.md`: comprehensive hook documentation with per-hook table (event, matcher, purpose, platform, requirements) and activation instructions
+- `hooks/settings-hooks.windows.json`: Windows-path variants of the baseline hooks using PowerShell (`pwsh -NoLogo -NoProfile -Command`)
+- `scripts/install-lib.sh`: shared helper functions (`collect_files`, `write_manifest`) sourced by `install.sh`
+- `scripts/migrate-credentials.sh`: PII-safety utility — scans for plain-text credentials and migrates them to `~/.config/claude-secrets/`; dry-run by default
+- `scripts/patch-settings-2026.mjs`: `settings.json` schema migration tool — adds `enabledMcpServers` lazy-loading and 2026 hook events (`ConfigChange`, `PostCompact`, `SessionEnd`); dry-run by default
+- `scripts/validate-install.sh`: post-install sanity checker with 7 checks (manifest, rules count, setup.md, phases, hooks, cache size, security); `--json` and `--verbose` flags
+- `scripts/cleanup-plugin-cache.sh`: removes stale `temp_git_*` directories from `~/.claude/plugins/cache/`; dry-run by default
+- `scripts/README.md`: full scripts index with safety labels, per-script documentation, and contributor guide
 
 ### Changed
 - .gitignore: narrowed .env.* to .env.local + .env.*.local so .env.example is tracked correctly

@@ -1,0 +1,16 @@
+{
+  "description": "Sends a native desktop notification when Claude Code finishes responding. Supports Windows (PowerShell toast), macOS (osascript), and Linux (notify-send).",
+  "hooks": {
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'display notification \"Response complete\" with title \"Claude Code\"'; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' 'Response complete'; elif command -v powershell.exe >/dev/null 2>&1; then powershell.exe -Command \"[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip(3000, 'Claude Code', 'Response complete', 'Info'); Start-Sleep -Seconds 4; $n.Dispose()\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
