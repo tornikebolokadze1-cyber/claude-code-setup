@@ -42,7 +42,11 @@ Install this once. Every project gets production infrastructure from day one.
 │   ├── vite-spa/
 │   ├── cloudflare-worker/
 │   └── hybrid-code-n8n/
-├── scripts/              ← Utility scripts
+├── scripts/              ← 8 utility scripts (sync, validate, migrate, patch...)
+├── hooks/
+│   ├── settings-hooks.json         ← 13 baseline hooks (merge into settings.json)
+│   ├── settings-hooks.windows.json ← Windows/PowerShell variants
+│   └── reference/                  ← 20 opt-in hook definitions (gallery)
 └── settings.json         ← Hooks configuration (merge manually)
 ```
 
@@ -397,7 +401,31 @@ cp -r bootstrap-templates/fastapi-backend ~/.claude/bootstrap-templates/
 
 ### Hooks (manual merge required)
 
-Hooks must be merged into your `~/.claude/settings.json`. See `hooks/settings-hooks.json` for the full configuration.
+Hooks must be merged into your `~/.claude/settings.json`. See [`hooks/README.md`](hooks/README.md) for full documentation.
+
+**Baseline (13 hooks, production-ready):**
+```bash
+# Merge with jq
+jq -s '.[0] * { "hooks": ( ... ) }' ~/.claude/settings.json hooks/settings-hooks.json > /tmp/merged.json   && mv /tmp/merged.json ~/.claude/settings.json
+# Windows: use hooks/settings-hooks.windows.json instead
+```
+
+**Hooks gallery (`hooks/reference/` — 20 definitions, opt-in):**
+
+A curated library of additional hooks covering:
+- Backup-before-edit, change tracker, console.log cleaner
+- Conventional commits enforcement, dangerous command blocker
+- Desktop & Telegram notifications
+- TDD gate, plan gate, scope guard (Spec-Driven Development)
+- Secret scanner, security scanner (semgrep/bandit/gitleaks)
+- Smart formatting (Prettier/Black/gofmt/rustfmt), smart commits
+- Auto test runner (npm test / pytest / rspec)
+
+Pick any hook from `hooks/reference/`, copy its `hooks` block into `~/.claude/settings.json`, and it activates immediately. See [`hooks/README.md`](hooks/README.md) for the full index and activation instructions.
+
+---
+
+## Utility Scripts
 
 ---
 

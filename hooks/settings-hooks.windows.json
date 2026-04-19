@@ -1,0 +1,109 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$LOGDIR = \\\"$env:USERPROFILE\\.claude\\\\audit-logs\\\"; New-Item -ItemType Directory -Force -Path $LOGDIR | Out-Null; $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'; \\\"[$timestamp] TOOL=$env:CLAUDE_TOOL_NAME\\\" | Add-Content -Path \\\"$LOGDIR\\\\audit-$(Get-Date -Format 'yyyy-MM-dd').log\\\" -ErrorAction SilentlyContinue\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$CMD = $env:CLAUDE_TOOL_INPUT; if ($CMD -match '^(npm|pnpm|yarn|bun) (run )?dev$') { $DIR_NAME = (Split-Path -Leaf (Get-Location)) -replace '[^a-zA-Z0-9]', '_'; Start-Process -NoNewWindow powershell -ArgumentList '-NoLogo', '-NoProfile', '-Command', $CMD; Write-Error \\\"Dev server started in background process for: $DIR_NAME\\\"; exit 2 }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$CMD = $env:CLAUDE_TOOL_INPUT; $patterns = @('git push --force', 'git push -f ', 'git reset --hard', 'DROP TABLE', 'DROP DATABASE', 'TRUNCATE TABLE', 'rm -rf /', 'rm -rf \\\\*'); $blocked = $false; foreach ($p in $patterns) { if ($CMD -match [regex]::Escape($p)) { $blocked = $true; break } }; if ($blocked) { Write-Error 'GOVERNANCE: Destructive command detected'; $LOGDIR = \\\"$env:USERPROFILE\\.claude\\\\audit-logs\\\"; New-Item -ItemType Directory -Force -Path $LOGDIR | Out-Null; $timestamp = Get-Date -Format 'yyyy-MM-dd HH:mm:ss'; \\\"[$timestamp] BLOCKED: $CMD\\\" | Add-Content -Path \\\"$LOGDIR\\\\governance-$(Get-Date -Format 'yyyy-MM-dd').log\\\" -ErrorAction SilentlyContinue; exit 2 }; exit 0\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; if ($FILE -match '\\.(js|ts|jsx|tsx|json|css|html)$') { npx prettier --write $FILE 2>$null } elseif ($FILE -match '\\.py$') { black $FILE 2>$null } elseif ($FILE -match '\\.go$') { gofmt -w $FILE 2>$null }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; if ($FILE -match '\\.(js|ts|jsx|tsx)$') { npx eslint $FILE --fix 2>$null } elseif ($FILE -match '\\.py$') { pylint $FILE 2>$null }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; $pattern = '(password|passwd|secret|api_key|apikey|api_secret|access_key|access_token|auth_token|private_key|client_secret|db_password|database_url|connection_string|jwt_secret|encryption_key|signing_key|webhook_secret)\\s*[=:]\\s*[\\\"''``][^\\\"\\'``]{8,}'; if (Test-Path $FILE) { $matches = Select-String -Pattern $pattern -Path $FILE -CaseSensitive:$false; if ($matches) { Write-Error '=== SECURITY ALERT ==='; Write-Error \\\"Potential secret in: $FILE\\\"; $matches | Select-Object -First 5 | ForEach-Object { Write-Error $_.ToString() }; Write-Error '=== Move to .env ==='; exit 1 } }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; if ($FILE -match '\\.(env|pem|key|p12|pfx|jks|keystore|credentials|secret)$') { Write-Error '=== BLOCKED: Sensitive file type ==='; exit 1 }; if ($FILE -match '(id_rsa|id_ed25519|\\.ssh/)') { Write-Error '=== BLOCKED: SSH file ==='; exit 1 }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; $BACKUP_DIR = \\\"$env:USERPROFILE\\.claude\\\\file-backups\\\\$(Get-Date -Format 'yyyy-MM-dd')\\\"; New-Item -ItemType Directory -Force -Path $BACKUP_DIR | Out-Null; $SAFE_NAME = $FILE -replace '[/\\\\:]', '_'; if (Test-Path $FILE) { $timestamp = Get-Date -Format 'HHmmss'; Copy-Item $FILE \\\"$BACKUP_DIR\\\\${SAFE_NAME}.$timestamp.bak\\\" -ErrorAction SilentlyContinue }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; if ($FILE -match '\\.(js|ts|jsx|tsx)$') { if ($FILE -notmatch '\\.(test|spec|config)\\.') { if ($FILE -notmatch '(__tests__|__mocks__|scripts/)') { $found = Select-String -Pattern 'console\\.(log|warn|error)' -Path $FILE -ErrorAction SilentlyContinue | Select-Object -First 5; if ($found) { Write-Warning \\\"WARNING: console.log found in $FILE\\\"; $found | ForEach-Object { Write-Warning $_.ToString() } } } } }; exit 0\""
+          }
+        ]
+      },
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$FILE = $env:CLAUDE_TOOL_FILE_PATH; if ($FILE -match '\\.(ts|tsx)$') { $DIR = Split-Path -Parent $FILE; $TSCONFIG = $null; $CUR = $DIR; for ($i = 0; $i -lt 15; $i++) { $candidate = Join-Path $CUR 'tsconfig.json'; if (Test-Path $candidate) { $TSCONFIG = $candidate; break }; $parent = Split-Path -Parent $CUR; if ($parent -eq $CUR) { break }; $CUR = $parent }; if ($TSCONFIG) { Push-Location (Split-Path -Parent $TSCONFIG); npx tsc --noEmit --pretty 2>&1 | Select-String -Pattern ([regex]::Escape((Split-Path -Leaf $FILE))) -Context 0,2 | Select-Object -First 10 | ForEach-Object { Write-Error $_.ToString() }; Pop-Location } }; exit 0\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "pwsh -NoLogo -NoProfile -Command \"$METRICS_DIR = \\\"$env:USERPROFILE\\.claude\\\\metrics\\\"; New-Item -ItemType Directory -Force -Path $METRICS_DIR | Out-Null; $timestamp = Get-Date -Format 'yyyy-MM-ddTHH:mm:ssZ' -AsUTC; $randomBytes = [System.Text.Encoding]::UTF8.GetBytes([string]([System.Random]::new().Next())); $sessionId = (Get-FileHash -Algorithm MD5 -InputStream ([IO.MemoryStream]::new($randomBytes))).Hash.Substring(0,8); $cwd = (Get-Location).Path; $line = \\\"{\\\\\\\"timestamp\\\\\\\":\\\\\\\"$timestamp\\\\\\\",\\\\\\\"session_id\\\\\\\":\\\\\\\"$sessionId\\\\\\\",\\\\\\\"cwd\\\\\\\":\\\\\\\"$($cwd -replace '\\\\\\\\','/')}\\\"\\\"}\\\"\"; $line | Add-Content -Path \\\"$METRICS_DIR\\\\sessions-$(Get-Date -Format 'yyyy-MM').jsonl\\\" -ErrorAction SilentlyContinue\""
+          }
+        ]
+      }
+    ]
+  }
+}

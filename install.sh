@@ -50,13 +50,21 @@ cp "$SCRIPT_DIR"/commands/setup-phases/*.md "$CLAUDE_DIR/commands/setup-phases/"
 cp "$SCRIPT_DIR"/commands/setup.md "$CLAUDE_DIR/commands/"
 echo "  /setup-AI-Pulse-Georgia command installed (+ phase files + deprecation alias)."
 
-# Copy scripts (including verify-local-sync.sh)
+# Copy scripts (shell + Node.js utilities)
 echo "Installing scripts..."
 mkdir -p "$CLAUDE_DIR/scripts"
 cp "$SCRIPT_DIR"/scripts/*.sh "$CLAUDE_DIR/scripts/"
+# Also copy Node.js scripts (.mjs)
+for mjs in "$SCRIPT_DIR"/scripts/*.mjs; do
+  [ -f "$mjs" ] && cp "$mjs" "$CLAUDE_DIR/scripts/"
+done
 chmod +x "$CLAUDE_DIR/scripts/"*.sh
-echo "  Scripts installed ($(ls "$SCRIPT_DIR"/scripts/*.sh | wc -l | tr -d ' ') files)."
-echo "  verify-local-sync.sh is now available at: $CLAUDE_DIR/scripts/verify-local-sync.sh"
+SH_COUNT=$(ls "$SCRIPT_DIR"/scripts/*.sh 2>/dev/null | wc -l | tr -d ' ')
+MJS_COUNT=$(ls "$SCRIPT_DIR"/scripts/*.mjs 2>/dev/null | wc -l | tr -d ' ')
+echo "  Scripts installed ($SH_COUNT shell + $MJS_COUNT Node.js files)."
+echo "  verify-local-sync.sh    -> $CLAUDE_DIR/scripts/verify-local-sync.sh"
+echo "  validate-install.sh     -> $CLAUDE_DIR/scripts/validate-install.sh"
+echo "  patch-settings-2026.mjs -> $CLAUDE_DIR/scripts/patch-settings-2026.mjs"
 
 # Copy bootstrap templates (including CLAUDE.md and .env.example per template)
 echo "Installing bootstrap templates..."

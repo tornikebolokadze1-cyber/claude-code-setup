@@ -1,0 +1,16 @@
+{
+  "description": "Send simple desktop notifications when Claude Code operations complete. Works on Windows, macOS, and Linux.",
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "if command -v osascript >/dev/null 2>&1; then osascript -e 'display notification \"Tool: '$CLAUDE_TOOL_NAME' completed\" with title \"Claude Code\"'; elif command -v notify-send >/dev/null 2>&1; then notify-send 'Claude Code' \"Tool: $CLAUDE_TOOL_NAME completed\"; elif command -v powershell.exe >/dev/null 2>&1; then powershell.exe -Command \"[System.Reflection.Assembly]::LoadWithPartialName('System.Windows.Forms') | Out-Null; $n = New-Object System.Windows.Forms.NotifyIcon; $n.Icon = [System.Drawing.SystemIcons]::Information; $n.Visible = $true; $n.ShowBalloonTip(2000, 'Claude Code', 'Tool completed', 'Info'); Start-Sleep -Seconds 3; $n.Dispose()\"; fi"
+          }
+        ]
+      }
+    ]
+  }
+}
