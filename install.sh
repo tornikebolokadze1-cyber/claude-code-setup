@@ -41,16 +41,21 @@ if [ "$NEEDS_BACKUP" = true ]; then
   echo "  Backup saved."
 fi
 
-# Helper: count files matching a glob without relying on `ls | wc -l` (SC2012-safe)
+# Helper: count files matching a glob, handling paths with spaces correctly.
+# Uses find so spaces in $HOME ("AI Pulse Georgia") do not break the count.
 count_glob() {
   local pattern="$1"
-  # shellcheck disable=SC2206
-  local matches=( $pattern )
-  if [ "${#matches[@]}" -eq 1 ] && [ ! -e "${matches[0]}" ]; then
-    echo 0
-  else
-    echo "${#matches[@]}"
+  local dir="${pattern%/*}"
+  local name="${pattern##*/}"
+  local maxdepth=1
+  # If pattern ends in /, caller wants a directory count
+  if [ "${pattern: -1}" = "/" ]; then
+    dir="${pattern%/}"
+    dir="${dir%/*}"
+    find "$dir" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' '
+    return
   fi
+  find "$dir" -maxdepth "$maxdepth" -name "$name" -type f 2>/dev/null | wc -l | tr -d ' '
 }
 
 # Copy rules
