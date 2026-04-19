@@ -34,12 +34,23 @@ collect_files() {
     DST_FILES+=("$CLAUDE_DIR/scripts/$(basename "$src")")
   done
 
-  # bootstrap-templates (recursive)
-  while IFS= read -r -d '' src; do
-    rel="${src#"$SCRIPT_DIR/bootstrap-templates/"}"
-    SRC_FILES+=("$src")
-    DST_FILES+=("$CLAUDE_DIR/bootstrap-templates/$rel")
-  done < <(find "$SCRIPT_DIR/bootstrap-templates" -type f -print0 2>/dev/null)
+  # archive/bootstrap-templates (recursive) — v0.4+ layout
+  if [ -d "$SCRIPT_DIR/archive/bootstrap-templates" ]; then
+    while IFS= read -r -d '' src; do
+      rel="${src#"$SCRIPT_DIR/archive/bootstrap-templates/"}"
+      SRC_FILES+=("$src")
+      DST_FILES+=("$CLAUDE_DIR/archive/bootstrap-templates/$rel")
+    done < <(find "$SCRIPT_DIR/archive/bootstrap-templates" -type f -print0 2>/dev/null)
+  fi
+
+  # Legacy bootstrap-templates (pre-v0.4) — kept for backward compat
+  if [ -d "$SCRIPT_DIR/bootstrap-templates" ]; then
+    while IFS= read -r -d '' src; do
+      rel="${src#"$SCRIPT_DIR/bootstrap-templates/"}"
+      SRC_FILES+=("$src")
+      DST_FILES+=("$CLAUDE_DIR/bootstrap-templates/$rel")
+    done < <(find "$SCRIPT_DIR/bootstrap-templates" -type f -print0 2>/dev/null)
+  fi
 }
 
 # Write the install manifest to MANIFEST_FILE.

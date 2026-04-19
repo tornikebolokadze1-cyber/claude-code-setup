@@ -5,7 +5,45 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased] - v0.3.0
+## [0.4.0] - 2026-04-20
+
+### Changed — breaking
+
+- **`bootstrap-templates/` moved to `archive/bootstrap-templates/`.** The 9 template directories are now explicitly archived. They are frozen at their v0.3.0 state and will not receive dependency updates or feature additions.
+- **`/setup-AI-Pulse-Georgia` delegates to community scaffolders** instead of copying monolithic templates. `phase-2.md` §2.7.3 now routes Next.js to `npx create-next-app@latest`, Vite to `npm create vite@latest`, FastAPI to `cookiecutter gh:arthurhenrique/cookiecutter-fastapi`, Cloudflare Worker to `npm create cloudflare@latest`, and falls back to archived templates for stacks without mature community scaffolders (AI agent, Telegram bot, n8n workflow, hybrid code+n8n).
+- **`install.sh` now copies the archive to `~/.claude/archive/bootstrap-templates/`** (with a deprecation notice) instead of `~/.claude/bootstrap-templates/`. Backward-compat: if the legacy `bootstrap-templates/` path is still present at install time, it is still copied to preserve existing muscle memory.
+- **Dependabot no longer watches `archive/**`.** Open Dependabot PRs against `bootstrap-templates/*` at the time of release are expected to auto-close once the templates move paths; any that remain can be closed manually.
+- **CI hardening:** `install.sh` rewritten to satisfy `shellcheck` without `-e` failures (eliminates SC2015 and SC2012 patterns that caused every push to `main` to show a red CI since v0.3.0 shipped).
+
+### Added
+
+- `archive/README.md` — migration guide explaining why templates were archived and the community-scaffolder alternatives per stack.
+- `templates/CLAUDE.md.example` — reference template (under 80 lines) showing the Anthropic April 2026 CLAUDE.md convention. `/setup-AI-Pulse-Georgia` can point users at this instead of generating ad-hoc CLAUDE.md files.
+- Updated `phase-2.md` §2.7.3 with a **delegation matrix** — one row per stack showing the canonical scaffolder command, execution rules, and the fallback to archived templates if upstream breaks.
+
+### Fixed
+
+- `install.sh` — SC2015 (`cmd && cmd || true` ambiguity, 3 occurrences) replaced with explicit `if` blocks.
+- `install.sh` — SC2012 (`ls | wc -l`, 7 occurrences) replaced with glob-array-length helper `count_glob()`.
+- `README.md` — version badge now reads `0.4.0` (was stuck at `0.2.x` after v0.3 shipped).
+- `README.md` — `~/.claude/` tree diagram now reflects the archive layout.
+
+### Migration (for users of v0.3.x)
+
+If you installed v0.3.x via `./install.sh`:
+
+1. Re-run `./install.sh` — archived templates land at `~/.claude/archive/bootstrap-templates/`; the old `~/.claude/bootstrap-templates/` path is left untouched (delete it yourself if you want; nothing reads from it anymore).
+2. Your `/setup-AI-Pulse-Georgia` command now invokes community scaffolders. First run on a Next.js project will trigger `npx --yes create-next-app@latest`; you'll see Claude asking once before it runs.
+3. No config file you wrote is affected. Rules, hooks, scripts, and phase files are unchanged in behavior — only the scaffolding step in Phase 2 changed.
+4. If you have active Dependabot PRs on `bootstrap-templates/*` in your fork, expect them to close automatically; if any linger, close them manually.
+
+### Rationale
+
+Templates are archetypes, not live code. Dependabot accumulated 20+ open PRs on `bootstrap-templates/*` between v0.3.0 (2026-04-19) and the v0.4 planning window (2026-04-20) because the weekly cadence couldn't be reconciled with the reality that template consumers copy once and then evolve independently. At the same time, Anthropic's April 2026 guidance and the top 5 community Claude Code repos all converged on the same pattern: **delegate scaffolding to upstream, layer Claude Code conventions on top**. v0.4 adopts that pattern; v0.5 is expected to add skills/agents/MCP defaults that Phase B of the roadmap requires (separate release).
+
+---
+
+## [0.3.0] - 2026-04-19
 
 ### Added
 - 5 per-template CLAUDE.md files restored in repo: ai-agent, express-backend, fastapi-backend,

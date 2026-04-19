@@ -284,17 +284,49 @@ DEEP_MERGE — add stack-specific commands ONLY if not already present. NEVER re
 
 ---
 
-#### 2.7.3 — Stack-Specific Config Files
+#### 2.7.3 — Scaffolding (delegate to community tools, then layer Claude Code conventions on top)
 
-**IF NEW_PROJECT:**
-**IF a pre-built template exists** (in ~/.claude/bootstrap-templates/):
-Copy and adapt the template.
+**v0.4.0 change:** We no longer copy monolithic templates from this repo.
+Instead, `/setup-AI-Pulse-Georgia` **delegates to the canonical community
+scaffolder** for each stack and then layers Claude Code conventions
+(`CLAUDE.md`, `.claude/rules/`, hooks, CI) on top. This keeps what the
+scaffolder produces always current and eliminates a class of maintenance
+debt (see `archive/README.md` for background).
 
-Available templates: nextjs-webapp, ai-agent, fastapi-backend, express-backend, telegram-bot, n8n-workflow, hybrid-code-n8n
+**IF NEW_PROJECT — use this delegation matrix:**
 
-**IF NO pre-built template exists:**
+| Detected stack | Scaffolder command (run non-interactively) | Notes |
+|---|---|---|
+| Next.js webapp | `npx --yes create-next-app@latest . --ts --tailwind --app --src-dir --import-alias "@/*" --use-npm --no-git` | Pin to latest; all flags explicit to avoid interactive mode |
+| Vite SPA (React) | `npm create vite@latest . -- --template react-ts` | Then `npm install` |
+| FastAPI backend | `pipx run cookiecutter gh:arthurhenrique/cookiecutter-fastapi --no-input` | Requires `pipx`; prompt to install if missing |
+| Express backend | `npm init -y` + copy `archive/bootstrap-templates/express-backend/` | No mature community scaffolder; archived template is canonical |
+| Cloudflare Worker | `npm create cloudflare@latest . -- --type hello-world --ts --no-git` | Wrangler handles the scaffolding |
+| AI agent (LangChain/LangGraph) | Copy `archive/bootstrap-templates/ai-agent/` | Niche; community scaffolders not mature |
+| Telegram bot | Copy `archive/bootstrap-templates/telegram-bot/` | Niche; no community scaffolder |
+| n8n workflow | Copy `archive/bootstrap-templates/n8n-workflow/` | n8n has no scaffolder; workflows are JSON |
+| Hybrid (code + n8n) | Run the matching code scaffolder AND copy the n8n workflow archetype | Two-step sequence |
+
+**How to run a scaffolder (non-technical-user-safe):**
+
+1. Ask user ONCE before the scaffolder runs:
+   "ვიყენებ ოფიციალურ ხელსაწყოს ({tool-name}) თქვენი პროექტის დასაწყისისთვის. დასჭირდება ~2 წუთი."
+2. Execute the command with all flags explicit (no interactive prompts).
+3. If the scaffolder asks a question despite flags (upstream change), cancel and fall back to the archived template from `archive/bootstrap-templates/`.
+4. Log the exact command in `docs/decisions/002-scaffolding.md` for reproducibility.
+
+**Archived templates fallback:**
+
+When a scaffolder is unavailable (new stack, offline, or upstream breakage),
+fall back to `archive/bootstrap-templates/{stack}/` — these are frozen at
+v0.3.0 state and WILL NOT receive updates. Warn the user:
+"ოფიციალური scaffolder ვერ გავუშვი, ვიყენებ ჩვენს frozen template-ს 2026-04-ს."
+
+**IF NO delegation option exists** (truly novel stack):
+
 Follow MANDATORY research-first protocol:
-1. Use WebSearch for "[framework/type] project structure best practices 2025 2026"
+
+1. WebSearch "[framework/type] project structure best practices 2026"
 2. Use `context7` MCP for up-to-date documentation
 3. Read at least 2-3 authoritative sources
 4. Create structure based on research
@@ -303,7 +335,7 @@ Follow MANDATORY research-first protocol:
 
 **IMPORTANT:** Never generate source code from memory alone for unfamiliar project types.
 
-**Note:** If this step requires installing dependencies, defer to step 2.7.8 for permission. Do NOT install anything in this step — only create config files.
+**Note:** If this step requires installing dependencies, defer to step 2.7.8 for permission. Only the scaffolder commands in the table above may run in this step — they are considered first-class scaffolding, not arbitrary installs.
 
 **IF EXISTING_PROJECT:**
 

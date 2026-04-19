@@ -2,11 +2,17 @@
 
 [![CI](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml/badge.svg)](https://github.com/tornikebolokadze1-cyber/claude-code-setup/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Version](https://img.shields.io/badge/version-0.2.x-blue.svg)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.4.0-blue.svg)](CHANGELOG.md)
 
 A complete, production-grade configuration system for [Claude Code](https://docs.anthropic.com/en/docs/claude-code) — Anthropic's official AI coding assistant.
 
 **This is not a CLI tool.** It's a configuration layer that installs into your `~/.claude/` directory and gives Claude Code production-level rules, safety guardrails, automated hooks, and a `/setup-AI-Pulse-Georgia` slash command that bootstraps any new project in under a minute.
+
+> **v0.4.0 (2026-04-20) — breaking-change highlights:**
+> - `bootstrap-templates/` moved to `archive/bootstrap-templates/` (frozen at v0.3.0 state).
+> - `/setup-AI-Pulse-Georgia` now **delegates to community scaffolders** (`create-next-app`, `cookiecutter`, `create-vite`, `create-cloudflare`) and layers Claude Code conventions on top — instead of copying monolithic templates. This matches April 2026 Anthropic + community consensus and eliminates the Dependabot maintenance treadmill that archived templates created.
+> - Niche stacks without mature scaffolders (AI agent, Telegram bot, n8n, hybrid) still use our archived templates as the canonical source.
+> - See `CHANGELOG.md` for the full migration guide and `archive/README.md` for why.
 
 ## The Problem
 
@@ -25,23 +31,24 @@ Install this once. Every project gets production infrastructure from day one.
 ~/.claude/
 ├── commands/
 │   ├── setup-AI-Pulse-Georgia.md  ← The /setup-AI-Pulse-Georgia slash command
-│   ├── setup.md                  ← Deprecated alias (removed in v0.3)
+│   ├── setup.md                  ← Deprecated alias (backward-compat)
 │   └── setup-phases/             ← Phase 0, 1, 2 sub-files
 ├── rules/                ← 22 rules + index Claude follows automatically
 │   ├── 01-auto-checkpoint.md
 │   ├── 02-scope-control.md
 │   ├── ...
 │   └── security.md
-├── bootstrap-templates/  ← 9 project starter templates
-│   ├── nextjs-webapp/
-│   ├── fastapi-backend/
-│   ├── express-backend/
-│   ├── ai-agent/
-│   ├── telegram-bot/
-│   ├── n8n-workflow/
-│   ├── vite-spa/
-│   ├── cloudflare-worker/
-│   └── hybrid-code-n8n/
+├── archive/
+│   └── bootstrap-templates/ ← 9 archived starter templates (v0.4 deprecation)
+│       ├── nextjs-webapp/       (prefer: npx create-next-app@latest)
+│       ├── fastapi-backend/     (prefer: cookiecutter-fastapi)
+│       ├── express-backend/
+│       ├── ai-agent/            (no community scaffolder — still canonical)
+│       ├── telegram-bot/        (no community scaffolder — still canonical)
+│       ├── n8n-workflow/        (no community scaffolder — still canonical)
+│       ├── vite-spa/            (prefer: npm create vite@latest)
+│       ├── cloudflare-worker/   (prefer: npm create cloudflare@latest)
+│       └── hybrid-code-n8n/     (combination — still canonical)
 ├── scripts/              ← 8 utility scripts (sync, validate, migrate, patch...)
 ├── hooks/
 │   ├── settings-hooks.json         ← 13 baseline hooks (merge into settings.json)
@@ -243,11 +250,23 @@ After infrastructure is ready, Claude asks what you want to build. Based on your
 
 ---
 
-## Bootstrap Templates
+## Bootstrap Templates (archived in v0.4)
 
-9 pre-configured project starters that `/setup-AI-Pulse-Georgia` uses based on your chosen stack.
-Every template ships with **CLAUDE.md** (project-specific Claude instructions) and **.env.example** (environment variable reference).
-See [bootstrap-templates/README.md](bootstrap-templates/README.md) for a decision tree and feature matrix:
+9 pre-configured project archetypes that `/setup-AI-Pulse-Georgia` used to
+copy directly. As of v0.4.0 they moved to
+[`archive/bootstrap-templates/`](archive/bootstrap-templates/README.md) and
+are frozen at their v0.3.0 state. For most stacks, `/setup-AI-Pulse-Georgia`
+now **delegates to the canonical community scaffolder**
+(`create-next-app`, `cookiecutter`, `create-vite`, `create-cloudflare`)
+and then layers Claude Code conventions on top. Archived templates remain
+the canonical starter for stacks without mature community scaffolders
+(AI agent, Telegram bot, n8n workflow, hybrid code+n8n). See
+[archive/README.md](archive/README.md) for the delegation map and rationale.
+
+Every archived template still ships with **CLAUDE.md** (project-specific
+Claude instructions) and **.env.example** (environment variable reference).
+See [archive/bootstrap-templates/README.md](archive/bootstrap-templates/README.md)
+for the legacy decision tree and feature matrix:
 
 ### Next.js Web App
 ```
@@ -339,7 +358,7 @@ wrangler.toml      <- Wrangler 4 config (compat date, KV/D1 stubs)
 ```
 Stack: TypeScript + Wrangler 4 + Vitest (workers pool) + HMAC webhook stub
 
-See [bootstrap-templates/README.md](./bootstrap-templates/README.md) for the full decision tree and feature matrix.
+See [archive/bootstrap-templates/README.md](./archive/bootstrap-templates/README.md) for the full (legacy) decision tree and feature matrix. `/setup-AI-Pulse-Georgia` now delegates to community scaffolders for Next.js, Vite, FastAPI, and Cloudflare Worker — see [archive/README.md](./archive/README.md) for the delegation map.
 
 
 ---
@@ -395,8 +414,8 @@ cp rules/*.md ~/.claude/rules/
 cp commands/setup-AI-Pulse-Georgia.md ~/.claude/commands/
 cp -r commands/setup-phases/ ~/.claude/commands/
 
-# Specific template only
-cp -r bootstrap-templates/fastapi-backend ~/.claude/bootstrap-templates/
+# Specific archived template only (most users should use community scaffolders instead)
+cp -r archive/bootstrap-templates/fastapi-backend ~/.claude/archive/bootstrap-templates/
 ```
 
 ### Hooks (manual merge required)
@@ -434,8 +453,8 @@ Pick any hook from `hooks/reference/`, copy its `hooks` block into `~/.claude/se
 ### Add your own rules
 Create any `.md` file in `~/.claude/rules/`. Claude loads all markdown files from that directory automatically.
 
-### Add your own templates
-Create a new directory in `~/.claude/bootstrap-templates/` with your project structure. The `/setup-AI-Pulse-Georgia` command will use it when the matching stack is selected.
+### Add your own templates or scaffolder route
+As of v0.4, new stacks are added by extending the delegation matrix in `commands/setup-phases/phase-2.md` §2.7.3 (preferred), not by adding template directories. If the stack has no mature community scaffolder, drop an archetype under `archive/bootstrap-templates/<your-stack>/` and add a row to the delegation matrix that copies it. Keep archived templates minimal — they will not receive Dependabot updates.
 
 ### Modify hooks
 Edit the hooks in `~/.claude/settings.json`. Each hook is a shell command that runs on specific triggers.

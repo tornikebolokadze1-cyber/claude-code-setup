@@ -22,7 +22,8 @@ assignees: tornikebolokadze1-cyber
 
 - [ ] `rules/` -- new or updated behavior rule
 - [ ] `commands/` -- `/setup-AI-Pulse-Georgia` improvement
-- [ ] `bootstrap-templates/` -- new or improved template
+- [ ] `archive/bootstrap-templates/` -- archived starter archetype (niche stack without a community scaffolder)
+- [ ] `commands/setup-phases/phase-2.md` delegation matrix -- route a new stack to a community scaffolder
 - [ ] `scripts/` -- new utility script
 - [ ] `.github/` -- CI/CD improvement
 - [ ] `install.sh` -- installer improvement
