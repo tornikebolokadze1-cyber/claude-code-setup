@@ -13,7 +13,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # gitleaks needs full history to diff parent..tip on PRs; shallow
           # clone causes "unknown revision" on the first commit of a branch.
