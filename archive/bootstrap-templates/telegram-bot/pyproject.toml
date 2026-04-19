@@ -5,10 +5,11 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "telegram-bot"
 version = "0.1.0"
-description = "Telegram bot built with python-telegram-bot v20+"
+description = "Telegram bot built with python-telegram-bot v22+"
 requires-python = ">=3.10"
 dependencies = [
-    "python-telegram-bot>=21.6,<22",
+    # v22 is the supported line as of April 2026; v21 reached EOL in Q1 2026.
+    "python-telegram-bot>=22.0,<23",
     "python-dotenv>=1.0.0,<2",
 ]
 

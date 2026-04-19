@@ -286,43 +286,84 @@ DEEP_MERGE — add stack-specific commands ONLY if not already present. NEVER re
 
 #### 2.7.3 — Scaffolding (delegate to community tools, then layer Claude Code conventions on top)
 
-**v0.4.0 change:** We no longer copy monolithic templates from this repo.
-Instead, `/setup-AI-Pulse-Georgia` **delegates to the canonical community
-scaffolder** for each stack and then layers Claude Code conventions
-(`CLAUDE.md`, `.claude/rules/`, hooks, CI) on top. This keeps what the
-scaffolder produces always current and eliminates a class of maintenance
-debt (see `archive/README.md` for background).
+**v0.4 change, corrected in v0.4.1:** `/setup-AI-Pulse-Georgia` delegates
+scaffolding to the canonical community tool for each stack, then layers
+Claude Code conventions (`CLAUDE.md`, `.claude/rules/`, hooks, CI) on top.
+The delegation map below was rewritten after adversarial audit revealed
+5 of 9 rows were broken in v0.4.0 (wrong flags, placeholder defaults,
+non-empty-dir prompts). See `archive/README.md` for background.
 
-**IF NEW_PROJECT — use this delegation matrix:**
+##### 2.7.3.a — Pre-flight checks (run these BEFORE any scaffolder)
 
-| Detected stack | Scaffolder command (run non-interactively) | Notes |
+Every scaffolder delegation has preconditions. Run this pre-flight BEFORE
+invoking the scaffolder. Abort to `archive/bootstrap-templates/<stack>/`
+fallback if any check fails.
+
+```bash
+# Node-based scaffolders (Next.js, Vite, Cloudflare Worker, Express)
+node --version    # need ≥ 20.19 for Vite 7, ≥ 18.18 for Next 16
+npm --version     # need ≥ 10
+# Python-based scaffolders (FastAPI cookiecutter)
+python --version  # need ≥ 3.11
+pipx --version    # must be installed and on PATH
+git --version     # need ≥ 2.30
+```
+
+Additionally:
+
+- **cwd MUST be prepared for scaffolder**. Phase 1 has already written
+  `.claude/`, `.github/`, `CLAUDE.md`, `.gitignore` to the project root.
+  Most scaffolders refuse to run in a non-empty directory OR will offer
+  to overwrite. Solution: run the scaffolder in a temp directory, then
+  `rsync -a --ignore-existing` the result into the project root. This
+  preserves Phase 1's files and adds the scaffolder's output.
+- **Git is initialized by Phase 1**, so pass each scaffolder's "skip
+  git init" flag. Flag names vary per scaffolder — see the matrix below.
+
+##### 2.7.3.b — Delegation matrix (April 2026, validated flags)
+
+| Detected stack | Canonical command (non-interactive) | Notes |
 |---|---|---|
-| Next.js webapp | `npx --yes create-next-app@latest . --ts --tailwind --app --src-dir --import-alias "@/*" --use-npm --no-git` | Pin to latest; all flags explicit to avoid interactive mode |
-| Vite SPA (React) | `npm create vite@latest . -- --template react-ts` | Then `npm install` |
-| FastAPI backend | `pipx run cookiecutter gh:arthurhenrique/cookiecutter-fastapi --no-input` | Requires `pipx`; prompt to install if missing |
-| Express backend | `npm init -y` + copy `archive/bootstrap-templates/express-backend/` | No mature community scaffolder; archived template is canonical |
-| Cloudflare Worker | `npm create cloudflare@latest . -- --type hello-world --ts --no-git` | Wrangler handles the scaffolding |
-| AI agent (LangChain/LangGraph) | Copy `archive/bootstrap-templates/ai-agent/` | Niche; community scaffolders not mature |
-| Telegram bot | Copy `archive/bootstrap-templates/telegram-bot/` | Niche; no community scaffolder |
-| n8n workflow | Copy `archive/bootstrap-templates/n8n-workflow/` | n8n has no scaffolder; workflows are JSON |
-| Hybrid (code + n8n) | Run the matching code scaffolder AND copy the n8n workflow archetype | Two-step sequence |
+| Next.js webapp | `npx --yes create-next-app@latest PROJECT_NAME --ts --tailwind --eslint --app --src-dir --import-alias "@/*" --use-npm --turbopack --disable-git --skip-install --yes` | Flag `--disable-git` (NOT `--no-git`). `--eslint` + `--turbopack` required in 16.x to avoid prompts. Scaffold into sibling dir `PROJECT_NAME`, then rsync in (see 2.7.3.c). |
+| Vite SPA (React) | `npm create vite@latest PROJECT_NAME -- --template react-ts --skip-git` + `cd PROJECT_NAME && npm install` | Node ≥ 20.19 required (Vite 7). Scaffold to sibling dir, then rsync. |
+| FastAPI backend | **Do NOT use cookiecutter with `--no-input`** — it produces placeholder project "Name of the project". Instead pass overrides: `pipx run cookiecutter gh:arthurhenrique/cookiecutter-fastapi --no-input --output-dir .. project_name="$PROJECT_NAME" full_name="$GIT_USER_NAME" email="$GIT_USER_EMAIL"`. If pipx missing → fall back to `archive/bootstrap-templates/fastapi-backend/`. |
+| Cloudflare Worker | `npm create cloudflare@latest PROJECT_NAME -- --type=hello-world --lang=ts --no-git --no-deploy --accept-defaults` | `--lang=ts` (NOT `--ts`). `--accept-defaults` suppresses deploy/git prompts. |
+| Express backend | Copy `archive/bootstrap-templates/express-backend/` THEN `npm install`. Do NOT run `npm init -y` (would clobber the template's `package.json`). No mature community scaffolder. |
+| AI agent (LangChain/LangGraph) | Copy `archive/bootstrap-templates/ai-agent/`. Template pins LangChain ≥ 1.1; ensure `requirements.txt` reflects current 1.x API (`langchain.agents` not `langgraph.prebuilt`). |
+| Telegram bot | Copy `archive/bootstrap-templates/telegram-bot/`. Template pins python-telegram-bot ≥ 22.0 (v21.x is EOL). |
+| n8n workflow | Copy `archive/bootstrap-templates/n8n-workflow/`. Validate JSON with `n8n_validate_workflow` before deploying. |
+| Hybrid (code + n8n) | **Two-step, confirm-before-each**: (1) ask user "რომელი code stack + n8n?"; (2) run code scaffolder as above and commit checkpoint; (3) THEN copy `archive/bootstrap-templates/n8n-workflow/workflows/` into `./workflows/`. |
 
-**How to run a scaffolder (non-technical-user-safe):**
+##### 2.7.3.c — Execution protocol (binding)
 
-1. Ask user ONCE before the scaffolder runs:
-   "ვიყენებ ოფიციალურ ხელსაწყოს ({tool-name}) თქვენი პროექტის დასაწყისისთვის. დასჭირდება ~2 წუთი."
-2. Execute the command with all flags explicit (no interactive prompts).
-3. If the scaffolder asks a question despite flags (upstream change), cancel and fall back to the archived template from `archive/bootstrap-templates/`.
-4. Log the exact command in `docs/decisions/002-scaffolding.md` for reproducibility.
+1. **Ask user ONCE before scaffolder runs.** Use this exact Georgian text:
+   > "ვაპირებ გაუშვა ოფიციალური scaffolder-ი ({tool-name}). ის ჩამოტვირთავს კოდს npm/GitHub-იდან მესამე მხარის maintainer-ისგან. დასჭირდება ~2 წუთი. გავაგრძელო?"
+   > → [კი] / [არა, ნუ გაუშვებ]
+2. **If user declines** → skip scaffolder, use `archive/bootstrap-templates/<stack>/` directly.
+3. **Scaffold into a sibling directory**, not `.`:
+   ```bash
+   # Example for Next.js
+   cd ..
+   npx --yes create-next-app@latest "$PROJECT_NAME" ... (flags above)
+   rsync -a --ignore-existing "$PROJECT_NAME"/ "$ORIGINAL_CWD"/
+   rm -rf "$PROJECT_NAME"
+   cd "$ORIGINAL_CWD"
+   ```
+   This preserves Phase 1's `.claude/`, `.github/`, `CLAUDE.md`, `.gitignore` while adding the scaffolder's source files.
+4. **If scaffolder exits non-zero OR prompts interactively** (SIGPIPE detected on stdin): cancel, fall back to archived template, warn the user: "ოფიციალური scaffolder-ი გაგიფუჭდა, ვიყენებ ჩვენს frozen template-ს (2026-04)."
+5. **If user Ctrl-C's during scaffolder**: delete the sibling directory, leave `.` untouched, report to user.
+6. **After scaffolder success**, run `git add -A && git commit -m "CHECKPOINT: scaffolder output — WORKING"` per rule 01 (scaffolders were run with `--disable-git`/`--no-git`/`--skip-git`, so we create the checkpoint here).
+7. **Log the exact command** in `docs/decisions/002-scaffolding.md` for reproducibility.
 
-**Archived templates fallback:**
+##### 2.7.3.d — Archived-template fallback (always works, no network)
 
-When a scaffolder is unavailable (new stack, offline, or upstream breakage),
-fall back to `archive/bootstrap-templates/{stack}/` — these are frozen at
-v0.3.0 state and WILL NOT receive updates. Warn the user:
-"ოფიციალური scaffolder ვერ გავუშვი, ვიყენებ ჩვენს frozen template-ს 2026-04-ს."
+When a scaffolder is unavailable (new stack, offline, upstream breakage,
+pre-flight failure), copy directly from `~/.claude/archive/bootstrap-templates/<stack>/`.
+Archived templates are frozen at v0.3.0 state and do not receive dependency
+updates. Warn the user:
+> "ოფიციალური scaffolder ვერ გავუშვი, ვიყენებ archived template-ს (frozen 2026-04). შესაძლებელია dependency-ების ხელით განახლება დაგჭირდეს."
 
-**IF NO delegation option exists** (truly novel stack):
+##### 2.7.3.e — Novel stack (no delegation, no archived template)
 
 Follow MANDATORY research-first protocol:
 
@@ -335,7 +376,17 @@ Follow MANDATORY research-first protocol:
 
 **IMPORTANT:** Never generate source code from memory alone for unfamiliar project types.
 
-**Note:** If this step requires installing dependencies, defer to step 2.7.8 for permission. Only the scaffolder commands in the table above may run in this step — they are considered first-class scaffolding, not arbitrary installs.
+##### 2.7.3.f — Threat model for delegation (disclose to user when first invoked)
+
+`npx --yes` and `pipx run` execute third-party code with the user's privileges.
+The first time `/setup-AI-Pulse-Georgia` proposes a scaffolder on a given
+machine, Claude MUST state this risk in plain language (rule 06, destructive
+actions). If the user accepts, cache the consent in
+`~/.claude/.consent-scaffolders.json` so the warning doesn't repeat on every run.
+
+**Note:** If this step requires installing dependencies via `npm install` or
+`pip install`, defer to step 2.7.8 for permission. Scaffolder commands in the
+matrix are considered first-class scaffolding; additional installs are not.
 
 **IF EXISTING_PROJECT:**
 
@@ -377,7 +428,17 @@ Only install if the user confirms.
 #### 2.7.5 — CI/CD
 
 **IF NEW_PROJECT:**
-Replace placeholder ci.yml with stack-specific pipeline from ~/Projects/github-actions-templates/
+Replace the placeholder `ci.yml` (written by Phase 1) with a stack-specific
+pipeline. Generate the pipeline inline based on the detected stack:
+
+- **Node-based (Next.js, Vite, Express, Cloudflare Worker):** `node -v`
+  check, `npm ci`, `npm run lint`, `npm test`, `npm run build`. Cache `~/.npm`.
+- **Python-based (FastAPI, AI agent, Telegram bot):** `python -m pip install
+  -r requirements.txt` (or `uv sync`), `ruff check`, `pytest`. Cache `~/.cache/pip`.
+- Always add: `actions/checkout@v4` with `fetch-depth: 0`, gitleaks secret scan,
+  `permissions: { contents: read }` block.
+- Reference model: this repo's own `.github/workflows/ci.yml` is a valid
+  working example to adapt from.
 
 **IF EXISTING_PROJECT:**
 - If workflows exist and cover CI + security → SKIP
@@ -389,7 +450,12 @@ Replace placeholder ci.yml with stack-specific pipeline from ~/Projects/github-a
 #### 2.7.6 — .vscode/
 
 **IF NEW_PROJECT:**
-Add stack-specific extensions and settings from ~/.claude/bootstrap/vscode/
+Create `.vscode/extensions.json` and `.vscode/settings.json` inline with
+stack-specific recommended extensions. Baseline (all stacks): `dbaeumer.vscode-eslint`,
+`esbenp.prettier-vscode`, `streetsidesoftware.code-spell-checker`. Python stacks
+add `ms-python.python`, `charliermarsh.ruff`. TS stacks add
+`bradlc.vscode-tailwindcss` for Next.js/Vite. Settings: `editor.formatOnSave: true`,
+`editor.codeActionsOnSave: { "source.fixAll.eslint": true }`.
 
 **IF EXISTING_PROJECT:**
 DEEP_MERGE — add missing stack-specific settings and extensions without overwriting existing preferences.

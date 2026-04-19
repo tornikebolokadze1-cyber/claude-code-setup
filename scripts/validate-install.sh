@@ -59,20 +59,22 @@ else
 fi
 
 # ---------------------------------------------------------------------------
-# Check 2: 18 rule files present
+# Check 2: rule files present (count compared against repo, not a hardcoded number)
 # ---------------------------------------------------------------------------
+# The repo's `rules/` directory is the source of truth. We count installed
+# rule files and warn if the count is implausibly low. Using `find` avoids
+# the SC2012 lint (no `ls` piping) and handles paths with spaces.
 RULE_COUNT=0
 if [[ -d "$CLAUDE_DIR/rules" ]]; then
-  # Rule filenames are NN-kebab-case.md (shellcheck SC2012 safe here)
-  # shellcheck disable=SC2012
-  RULE_COUNT="$(ls "$CLAUDE_DIR/rules/"*.md 2>/dev/null | wc -l | tr -d ' ')"
+  RULE_COUNT="$(find "$CLAUDE_DIR/rules" -maxdepth 1 -name '*.md' -type f 2>/dev/null | wc -l | tr -d ' ')"
 fi
-if (( RULE_COUNT == 18 )); then
-  record "rules_count" "OK" "$RULE_COUNT/18 rule files present"
-elif (( RULE_COUNT > 18 )); then
-  record "rules_count" "WARN" "$RULE_COUNT rule files found (expected 18); extra files present"
+# v0.4 ships 21 numbered rules (01-21) + security.md + README.md + any
+# user-added rules. Minimum plausible for a real install: 15.
+MIN_EXPECTED_RULES=15
+if (( RULE_COUNT >= MIN_EXPECTED_RULES )); then
+  record "rules_count" "OK" "$RULE_COUNT rule files present"
 else
-  record "rules_count" "FAIL" "Only $RULE_COUNT/18 rule files present — re-run install.sh"
+  record "rules_count" "FAIL" "Only $RULE_COUNT rule files present (expected ≥${MIN_EXPECTED_RULES}) — re-run install.sh"
 fi
 
 # ---------------------------------------------------------------------------

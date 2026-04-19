@@ -376,7 +376,11 @@ updates:
 Ask for GitHub username or use placeholder.
 
 **`.github/PULL_REQUEST_TEMPLATE.md`:**
-Change type checkboxes + checklist (from ~/claude-code-bootstrap/.github/).
+Change type checkboxes + checklist. Use the template at
+`~/.claude/.github-defaults/PULL_REQUEST_TEMPLATE.md` if it exists (installed by
+`install.sh`), otherwise fall back to the default at the repo root
+`.github/PULL_REQUEST_TEMPLATE.md` (this repo's own PR template is
+representative and can be reused).
 
 **`.github/ISSUE_TEMPLATE/bug_report.md`:**
 Structured bug report with environment info.
@@ -489,10 +493,16 @@ Comprehensive — covers ALL common stacks preemptively:
 ```
 
 **`SECURITY.md`:**
-Vulnerability disclosure policy with response timeline (from ~/claude-code-bootstrap/).
+Vulnerability disclosure policy with response timeline. Generate inline
+using the template in `~/.claude/.github-defaults/SECURITY.md` if present,
+otherwise inline: supported versions table, reporting address (user's email
+from git config), response timeline (acknowledge within 48h, patch within 14d
+for critical).
 
 **`CONTRIBUTING.md`:**
-Fork → branch → code → test → PR workflow (from ~/claude-code-bootstrap/).
+Fork → branch → code → test → PR workflow. Inline content with sections:
+project setup, branch naming, commit conventions, PR review, code of conduct
+reference.
 
 **`LICENSE`:**
 MIT with current year and user's name.

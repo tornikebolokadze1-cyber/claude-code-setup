@@ -5,6 +5,82 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.1] - 2026-04-20
+
+Adversarial-audit follow-up to v0.4.0. Five parallel critical-review agents
+(flow, install pipeline, scaffolder validation, docs, security) found 19 P0
+and 24 P1 issues in the freshly-shipped v0.4.0 — many of which meant
+`/setup-AI-Pulse-Georgia` would have failed on first run for most stacks.
+This release fixes all P0 findings and the most impactful P1s.
+
+### Fixed — P0 (would have broken first user run)
+
+- **Scaffolder matrix (`commands/setup-phases/phase-2.md` §2.7.3):**
+  - Next.js: `--no-git` → `--disable-git`; added `--eslint --turbopack --skip-install --yes` to suppress new 16.x prompts.
+  - Vite: added explicit non-empty-dir handling via sibling-directory + rsync; documented Node ≥ 20.19 requirement for Vite 7.
+  - FastAPI cookiecutter: `--no-input` alone produced project named "Name of the project"; now passes `project_name/full_name/email` overrides.
+  - Cloudflare: `--ts` → `--lang=ts`; added `--accept-defaults --no-deploy`.
+  - Express: removed `npm init -y` (was clobbering template's `package.json`).
+  - Hybrid: split into 3-step confirmed flow (ask → scaffold-and-checkpoint → copy n8n archetype).
+- **`install.sh` now copies `hooks/` and `templates/`** — previously both directories were skipped entirely, meaning the advertised "13 active hooks" and the `templates/CLAUDE.md.example` reference template never reached `~/.claude/`. A fresh install was silently missing half its surface area.
+- **`scripts/validate-install.sh` no longer hardcodes `RULE_COUNT == 18`** — repo ships 23 rule files; doctor now uses a plausibility floor (≥ 15) and counts dynamically with `find`.
+- **Phantom-path references removed:**
+  - `phase-1.md` no longer cites `~/claude-code-bootstrap/` (3 occurrences); inlines guidance or points to `~/.claude/.github-defaults/` with fallback.
+  - `phase-2.md` §2.7.5 no longer cites `~/Projects/github-actions-templates/`; generates CI inline per stack.
+  - `phase-2.md` §2.7.6 no longer cites `~/.claude/bootstrap/vscode/`; inlines extension recommendations.
+- **`README.md`:**
+  - Truncated `jq -s '.[0] * { "hooks": ( ... ) }'` snippet replaced with a working `jq -s '.[0] * .[1]'` command (Unix + Windows variants).
+  - Empty `## Utility Scripts` section populated with the full script index.
+  - Stale "7 automated hooks" count replaced with tiered description (13 baseline + 20 reference).
+- **`scripts/verify-local-sync.sh`** COMPARE_PATHS: removed stale `bootstrap-templates` entry (was generating false-positive drift every run), added `templates` and `SECURITY.md`.
+- **`commands/setup.md`:** removed stale "will be removed in v0.3" text — v0.3/v0.4 have shipped; alias is now documented as kept indefinitely.
+- **`CHANGELOG.md`:** added missing compare links for `[0.3.0]` and `[0.4.0]` (Keep-a-Changelog compliance).
+
+### Added
+
+- **`SECURITY.md`** at repo root — supported versions, vulnerability reporting procedure, threat model for scaffolder delegation (`npx --yes`, `pipx run`), residual-risk disclosure.
+- **`.gitleaks.toml`** — custom rules for Telegram bot tokens, Anthropic API keys, OpenAI keys, n8n API keys, Supabase service-role JWTs, Cloudflare API tokens, Firecrawl API keys. Default gitleaks rules did not cover several of the exact secret types this repo's users routinely handle.
+- **`templates/settings.local.json.example`** — reference Claude Code project-level permissions overlay with 60+ deny-list entries (rm -rf, git force-push, DROP TABLE, shutdown, curl|bash, SSH key reads, secret-file writes) per rule 06 and security.md §1.2. CLAUDE.md has long cited a "115-entry deny-list" without the repo actually shipping one.
+- **`templates/README.md`** — explains what lives in `templates/` and how/when `/setup-AI-Pulse-Georgia` uses each reference file.
+- **`uninstall.sh`** — safe, backup-first removal of everything `install.sh` installed. Preserves user's `settings.json`, `settings.local.json`, memory, and projects. Ported from the stale `chore/quality-100` branch.
+- **CI smoke test** — `.github/workflows/ci.yml` now runs `./install.sh` against a scratch `HOME` and asserts the expected directory tree + rule count. This would have caught P0-level install bugs before v0.4.0 shipped.
+- **`permissions: { contents: read }`** top-level block in `ci.yml` (security.md §1.2 least privilege). GitHub's default token grant is implicit write; this makes the scope explicit.
+
+### Changed
+
+- **Scaffolder invocation protocol** (phase-2.md §2.7.3.c): scaffolders now run in a sibling temp directory, not `.`, to avoid the "target not empty" conflict caused by Phase 1 creating files first. Results are `rsync`-ed back into the project root with `--ignore-existing`.
+- **Consent protocol** (§2.7.3.f): the first scaffolder invocation on a machine now explicitly discloses the third-party supply-chain risk. Consent is cached at `~/.claude/.consent-scaffolders.json` so subsequent runs don't re-prompt.
+- **Archive template dependency bumps:**
+  - `ai-agent/pyproject.toml`: `langchain>=0.3.18 → >=1.1,<2`, `langgraph>=0.3.12 → >=1.0,<2` (LangChain 1.0 unified the agent API; `langgraph.prebuilt` moved to `langchain.agents`).
+  - `telegram-bot/pyproject.toml`: `python-telegram-bot>=21.6,<22 → >=22.0,<23` (v21 reached EOL Q1 2026).
+  - `telegram-bot/requirements.txt`: bumped PTB 21.10 → 22.7, ruff 0.4.10 → 0.15.11, pytest-asyncio 0.24.0 → 0.26.0, mypy 1.13.0 → 1.20.1, python-dotenv 1.0.1 → 1.2.2.
+- **`.gitignore`** expanded per security.md §4.2 mandate: added `*.pem`, `*.key`, `*.p12`, `*.pfx`, `*.jks`, `credentials.json`, `serviceAccountKey.json`, `secrets/`, `.envrc`, `.envrc.template.*`, `.claude/settings.local.json`. The repo previously preached patterns it didn't enforce on itself.
+
+### Migration (v0.4.0 → v0.4.1)
+
+Re-run `./install.sh`. It will now populate `~/.claude/hooks/`,
+`~/.claude/templates/`, and refresh the updated phase/command/rule files.
+No manual migration needed. `/setup-AI-Pulse-Georgia` keeps the same entry
+point — only the internal scaffolder matrix changed, and the new version
+actually works.
+
+### Research basis
+
+Five parallel critical-review agents (general-purpose model, adversarial
+prompting) audited v0.4.0 on 2026-04-20:
+
+- Agent 1 — End-to-end flow: 4 P0 + 10 P1.
+- Agent 2 — Install pipeline + CI: 4 P0 + 8 P1 + 8 coverage gaps.
+- Agent 3 — Scaffolder delegation vs upstream: 5 of 9 rows broken on first run.
+- Agent 4 — Documentation and reference integrity: 6 P0 + 13 P1.
+- Agent 5 — Security + supply chain: 0 P0 exploit + 7 P1 hardening gaps.
+
+Total: 19 P0 + 24 P1 findings. This release addresses all 19 P0 and most
+of the P1s. The residual P1s (GH Actions SHA pinning, macOS/Windows CI
+matrix) are tracked in `docs/decisions/` for future iterations.
+
+---
+
 ## [0.4.0] - 2026-04-20
 
 ### Changed — breaking
@@ -115,5 +191,8 @@ If you've already run `./install.sh` from v0.1.x:
 ### Added
 - Initial release: 18 rules, 7 bootstrap templates, dual-mode `/setup` command, 7 hooks, install script.
 
+[0.4.1]: https://github.com/tornikebolokadze1-cyber/claude-code-setup/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/tornikebolokadze1-cyber/claude-code-setup/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/tornikebolokadze1-cyber/claude-code-setup/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/tornikebolokadze1-cyber/claude-code-setup/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/tornikebolokadze1-cyber/claude-code-setup/releases/tag/v0.1.0

@@ -48,11 +48,11 @@ COMPARE_PATHS=(
   "scripts"
   "archive"
   "templates"
-  "bootstrap-templates"
   "install.sh"
   "README.md"
   "LICENSE"
   "CHANGELOG.md"
+  "SECURITY.md"
 )
 
 # ── Patterns to skip ─────────────────────────────────────────────────────────
