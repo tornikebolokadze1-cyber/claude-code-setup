@@ -107,10 +107,10 @@ fi
 mkdir -p "$VAULT_DIR"
 chmod 700 "$VAULT_DIR" 2>/dev/null || true
 
-: > .envrc.template.$STAMP
-echo "# .envrc.template - fill in real values, then 'direnv allow'" > .envrc.template.$STAMP
-echo "# Generated: $STAMP" >> .envrc.template.$STAMP
-echo "" >> .envrc.template.$STAMP
+: > .envrc.template."$STAMP"
+echo "# .envrc.template - fill in real values, then 'direnv allow'" > .envrc.template."$STAMP"
+echo "# Generated: $STAMP" >> .envrc.template."$STAMP"
+echo "" >> .envrc.template."$STAMP"
 
 for m in "${MATCHES[@]}"; do
   BASENAME=$(basename "$m")
@@ -139,12 +139,12 @@ for m in "${MATCHES[@]}"; do
   fi
 
   if [[ -n "$KEYS" ]]; then
-    echo "# from: $m" >> .envrc.template.$STAMP
+    echo "# from: $m" >> .envrc.template."$STAMP"
     while IFS= read -r k; do
       [[ -z "$k" ]] && continue
-      echo "export $k=\"REPLACE-ME\"" >> .envrc.template.$STAMP
+      echo "export $k=\"REPLACE-ME\"" >> .envrc.template."$STAMP"
     done <<< "$KEYS"
-    echo "" >> .envrc.template.$STAMP
+    echo "" >> .envrc.template."$STAMP"
   fi
 
   # Move to vault
@@ -154,9 +154,9 @@ for m in "${MATCHES[@]}"; do
 done
 
 echo ""
-echo "Env template: ./.envrc.template.$STAMP"
+echo "Env template: ./.envrc.template."$STAMP""
 echo ""
 echo "Next steps:"
-echo "  1. Open .envrc.template.$STAMP and fill in real values (get them from $VAULT_DIR or your password manager)"
+echo "  1. Open .envrc.template."$STAMP" and fill in real values (get them from $VAULT_DIR or your password manager)"
 echo "  2. Rename to .envrc and run 'direnv allow .'"
 echo "  3. Verify tools still work, then delete $VAULT_DIR after a week"
